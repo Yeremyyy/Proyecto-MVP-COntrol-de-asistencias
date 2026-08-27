@@ -3,13 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Asistencia MVP</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-    </style>
+    <title>Control de Asistencia</title>
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <h1>Bienvenido al Sistema de Asistencia</h1>
-    <p>La ventana de Electron está funcionando correctamente.</p>
+
+    <div id="vista-login" class="contenedor activa">
+        <div class="tarjeta">
+            <h2>Ingreso al Sistema</h2>
+            <form id="formulario-login">
+                <div class="grupo-input">
+                    <label for="correo">Correo Electrónico</label>
+                    <input type="email" id="correo" required>
+                </div>
+                <div class="grupo-input">
+                    <label for="contrasena">Contraseña</label>
+                    <input type="password" id="contrasena" required>
+                </div>
+                <p id="mensaje-error" class="texto-error"></p>
+                <button type="submit" class="btn-primario">Iniciar Sesión</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="vista-panel" class="contenedor">
+        <div class="tarjeta tarjeta-ancha">
+            <h2>Bienvenido, <span id="nombre-usuario"></span></h2>
+            <p class="reloj" id="reloj-actual">00:00:00</p>
+            
+            <div class="grupo-botones">
+                <button id="btn-entrada" class="btn-accion btn-entrada">Marcar Entrada</button>
+                <button id="btn-salida" class="btn-accion btn-salida">Marcar Salida</button>
+            </div>
+            
+            <p id="mensaje-estado" class="texto-estado"></p>
+            
+            <button id="btn-cerrar-sesion" class="btn-texto">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <script src="./app.js"></script>
 </body>
 </html>
