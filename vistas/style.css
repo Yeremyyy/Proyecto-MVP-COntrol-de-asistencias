@@ -1,52 +1,58 @@
-Reseteo básico
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+/* Reseteo y Tipografía Corporativa */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
 
 body { 
-    background-color: #ececec; 
-    color: #1a1a1a; 
+    background-color: #f4f4f4; /* Gris muy claro, neutro */
+    color: #000000; /* Contraste máximo */
     display: flex; 
     justify-content: center; 
     align-items: center; 
     height: 100vh; 
 }
 
-Control de Vistas 
-.contenedor { display: none; width: 100%; max-width: 380px; padding: 20px; }
+/* Contenedores */
+.contenedor { display: none; width: 100%; max-width: 400px; padding: 20px; }
 .contenedor.activa { display: block; }
 
-Tarjetas
+/* Estructura de Tarjeta Ultra Plana (Cero sombras) */
 .tarjeta { 
     background-color: #ffffff; 
-    padding: 30px; 
-    border: 1px solid #cccccc; 
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.05); 
+    padding: 40px; 
+    border: 1px solid #e0e0e0; /* Borde muy fino, nada de sombras */
 }
-.tarjeta-ancha { max-width: 450px; margin: 0 auto; }
+.tarjeta-ancha { max-width: 480px; margin: 0 auto; }
 
-h2 { margin-bottom: 20px; font-weight: 600; font-size: 1.4em; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px; }
+/* Encabezados*/
+h2 { margin-bottom: 25px; font-weight: 400; font-size: 1.2rem; color: #000; letter-spacing: -0.5px; }
 
-Formularios
-.grupo-input { margin-bottom: 15px; }
-label { display: block; margin-bottom: 5px; font-size: 0.85em; font-weight: 600; text-transform: uppercase; color: #4a4a4a; }
-input { width: 100%; padding: 10px; border: 1px solid #999; font-size: 1em; background-color: #fafafa; }
-input:focus { border-color: #1a1a1a; outline: none; background-color: #fff; }
+/* Formularios */
+.grupo-input { margin-bottom: 20px; }
+label { display: block; margin-bottom: 8px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #666; }
+input { width: 100%; padding: 12px; border: 1px solid #ccc; font-size: 0.95rem; background-color: #fff; outline: none; }
+input:focus { border-color: #000; }
 
-Botones
-button { cursor: pointer; font-size: 1em; font-weight: bold; border: none; transition: background 0.2s; }
-.btn-primario { width: 100%; padding: 12px; background-color: #1a1a1a; color: #ffffff; margin-top: 10px;}
-.btn-primario:hover { background-color: #333333; }
+/* Botones*/
+button { cursor: pointer; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s ease; border: none; }
 
-.grupo-botones { display: flex; gap: 10px; margin-top: 20px; }
-.btn-accion { flex: 1; padding: 15px; color: #fff; }
-.btn-entrada { background-color: #2b6a42; } 
-.btn-entrada:hover { background-color: #1e4d30; }
-.btn-salida { background-color: #8a2525; }  
-.btn-salida:hover { background-color: #631919; }
+/* Botón Login: Negro sólido */
+.btn-primario { width: 100%; padding: 14px; background-color: #000; color: #fff; margin-top: 10px; }
+.btn-primario:hover { background-color: #333; }
 
-.btn-texto { width: 100%; background: none; color: #666; margin-top: 25px; text-decoration: underline; font-size: 0.9em; }
-.btn-texto:hover { color: #1a1a1a; }
+/* Botones de acción: Estilo Outline (Solo bordes) */
+.grupo-botones { display: flex; gap: 15px; margin-top: 30px; }
+.btn-accion { flex: 1; padding: 14px; background-color: transparent; }
 
-Textos informativos
-.texto-error { color: #8a2525; font-size: 0.85em; min-height: 18px; margin-bottom: 10px; }
-.reloj { font-size: 2.5em; text-align: center; margin: 20px 0; font-variant-numeric: tabular-nums; color: #1a1a1a; }
-.texto-estado { text-align: center; margin-top: 15px; font-size: 0.95em; font-weight: bold; min-height: 20px; }
+.btn-entrada { border: 1px solid #198754; color: #198754; } 
+.btn-entrada:hover { background-color: #198754; color: #fff; }
+
+.btn-salida { border: 1px solid #dc3545; color: #dc3545; }  
+.btn-salida:hover { background-color: #dc3545; color: #fff; }
+
+/* Enlace de cierre de sesión */
+.btn-texto { width: 100%; background: none; color: #888; margin-top: 30px; font-size: 0.75rem; }
+.btn-texto:hover { color: #000; }
+
+/* Textos informativos */
+.texto-error { color: #dc3545; font-size: 0.75rem; min-height: 18px; margin-bottom: 12px; }
+.reloj { font-size: 3.5rem; text-align: center; margin: 30px 0; font-weight: 300; font-variant-numeric: tabular-nums; color: #000; letter-spacing: -2px; }
+.texto-estado { text-align: center; margin-top: 20px; font-size: 0.8rem; min-height: 20px; color: #666; }
