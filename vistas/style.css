@@ -1,58 +1,205 @@
-/* Reseteo y Tipografía Corporativa */
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
 
-body { 
-    background-color: #f4f4f4; /* Gris muy claro, neutro */
-    color: #000000; /* Contraste máximo */
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    height: 100vh; 
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
 }
 
-/* Contenedores */
-.contenedor { display: none; width: 100%; max-width: 400px; padding: 20px; }
-.contenedor.activa { display: block; }
-
-/* Estructura de Tarjeta Ultra Plana (Cero sombras) */
-.tarjeta { 
-    background-color: #ffffff; 
-    padding: 40px; 
-    border: 1px solid #e0e0e0; /* Borde muy fino, nada de sombras */
+body {
+    background-color: #f4f4f4;
+    color: #000000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
 }
-.tarjeta-ancha { max-width: 480px; margin: 0 auto; }
 
-/* Encabezados*/
-h2 { margin-bottom: 25px; font-weight: 400; font-size: 1.2rem; color: #000; letter-spacing: -0.5px; }
+/* mCONTENEDORES Y ESTRUCTURA BASE */
+.contenedor {
+    display: none;
+    width: 100%;
+    padding: 20px;
+    /* Eliminamos el max-width de aquí para que no estrangule a las tablas */
+}
 
-/* Formularios */
-.grupo-input { margin-bottom: 20px; }
-label { display: block; margin-bottom: 8px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #666; }
-input { width: 100%; padding: 12px; border: 1px solid #ccc; font-size: 0.95rem; background-color: #fff; outline: none; }
-input:focus { border-color: #000; }
+.contenedor.activa {
+    display: block;
+}
 
-/* Botones*/
-button { cursor: pointer; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s ease; border: none; }
+.tarjeta {
+    background-color: #ffffff;
+    padding: 40px;
+    border: 1px solid #e0e0e0;
+    width: 100%;
+    max-width: 400px; /* El login y panel empleado se mantienen compactos */
+    margin: 0 auto;   /* Centra la tarjeta en la pantalla */
+}
 
-/* Botón Login: Negro sólido */
-.btn-primario { width: 100%; padding: 14px; background-color: #000; color: #fff; margin-top: 10px; }
-.btn-primario:hover { background-color: #333; }
+.tarjeta-ancha {
+    max-width: 750px; /* El panel admin ahora tiene permiso real para expandirse */
+}
 
-/* Botones de acción: Estilo Outline (Solo bordes) */
-.grupo-botones { display: flex; gap: 15px; margin-top: 30px; }
-.btn-accion { flex: 1; padding: 14px; background-color: transparent; }
+/* TIPOGRAFÍA Y TEXTOS */
+h2 {
+    margin-bottom: 25px;
+    font-weight: 400;
+    font-size: 1.2rem;
+    color: #000000;
+    letter-spacing: -0.5px;
+}
 
-.btn-entrada { border: 1px solid #198754; color: #198754; } 
-.btn-entrada:hover { background-color: #198754; color: #fff; }
+.texto-error {
+    color: #dc3545;
+    font-size: 0.75rem;
+    min-height: 18px;
+    margin-bottom: 12px;
+}
 
-.btn-salida { border: 1px solid #dc3545; color: #dc3545; }  
-.btn-salida:hover { background-color: #dc3545; color: #fff; }
+.texto-estado {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.8rem;
+    min-height: 20px;
+    color: #666666;
+}
 
-/* Enlace de cierre de sesión */
-.btn-texto { width: 100%; background: none; color: #888; margin-top: 30px; font-size: 0.75rem; }
-.btn-texto:hover { color: #000; }
+.reloj {
+    font-size: 3.5rem;
+    text-align: center;
+    margin: 30px 0;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    color: #000000;
+    letter-spacing: -2px;
+}
 
-/* Textos informativos */
-.texto-error { color: #dc3545; font-size: 0.75rem; min-height: 18px; margin-bottom: 12px; }
-.reloj { font-size: 3.5rem; text-align: center; margin: 30px 0; font-weight: 300; font-variant-numeric: tabular-nums; color: #000; letter-spacing: -2px; white-space: nowrap }
-.texto-estado { text-align: center; margin-top: 20px; font-size: 0.8rem; min-height: 20px; color: #666; }
+/* FORMULARIOS */
+.grupo-input {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666666;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cccccc;
+    font-size: 0.95rem;
+    background-color: #ffffff;
+    outline: none;
+    border-radius: 0; /* Asegura que no haya bordes redondeados */
+}
+
+input:focus {
+    border-color: #000000;
+}
+
+/* BOTONES */
+button {
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    border: none;
+    border-radius: 0; 
+}
+
+.btn-primario {
+    width: 100%;
+    padding: 14px;
+    background-color: #000000;
+    color: #ffffff;
+    margin-top: 10px;
+}
+
+.btn-primario:hover {
+    background-color: #333333;
+}
+
+.grupo-botones {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn-accion {
+    flex: 1;
+    padding: 14px;
+    background-color: transparent;
+}
+
+.btn-entrada {
+    border: 1px solid #198754;
+    color: #198754;
+}
+
+.btn-entrada:hover {
+    background-color: #198754;
+    color: #ffffff;
+}
+
+.btn-salida {
+    border: 1px solid #dc3545;
+    color: #dc3545;
+}
+
+.btn-salida:hover {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+
+.btn-texto {
+    width: 100%;
+    background: none;
+    color: #888888;
+    margin-top: 30px;
+    font-size: 0.75rem;
+}
+
+.btn-texto:hover {
+    color: #000000;
+}
+
+/* Tabla de reportes */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    text-align: left;
+}
+
+th {
+    border-bottom: 2px solid #000000;
+    padding: 15px 10px;
+    text-transform: uppercase;
+    color: #666666;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+td {
+    border-bottom: 1px solid #eeeeee;
+    padding: 15px 10px;
+    color: #000000;
+}
+
+.atraso-si {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.atraso-no {
+    color: #198754;
+    font-weight: 600;
+}
