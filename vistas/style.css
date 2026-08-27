@@ -54,5 +54,5 @@ button { cursor: pointer; font-size: 0.8rem; font-weight: 600; text-transform: u
 
 /* Textos informativos */
 .texto-error { color: #dc3545; font-size: 0.75rem; min-height: 18px; margin-bottom: 12px; }
-.reloj { font-size: 3.5rem; text-align: center; margin: 30px 0; font-weight: 300; font-variant-numeric: tabular-nums; color: #000; letter-spacing: -2px; }
+.reloj { font-size: 3.5rem; text-align: center; margin: 30px 0; font-weight: 300; font-variant-numeric: tabular-nums; color: #000; letter-spacing: -2px; white-space: nowrap }
 .texto-estado { text-align: center; margin-top: 20px; font-size: 0.8rem; min-height: 20px; color: #666; }
