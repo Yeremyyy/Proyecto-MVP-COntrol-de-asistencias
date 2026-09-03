@@ -1,20 +1,18 @@
-// 1. BASE DE DATOS SIMULADA (MOCK)
+// 1. BASE DE DATOS SIMULADA (MOCK) USANDO CLASES (POO)
 const usuariosBD = [
-    { id: 1, correo: 'jordan@empresa.cl', contrasena: '123', nombre: 'Jordan', rol: 'admin' },
-    // Agregamos hora_salida (18:00 hrs) a los empleados
-    { id: 2, correo: 'rafa@empresa.cl', contrasena: '123', nombre: 'Rafa', rol: 'empleado', hora_entrada: '08:00', hora_salida: '17:50' },
-    { id: 3, correo: 'pato@empresa.cl', contrasena: '123', nombre: 'Pato', rol: 'empleado', hora_entrada: '08:00', hora_salida: '17:00' }
+    // Instanciamos usando las clases de src/clases.js
+    new Administrador(1, 'jordan@empresa.cl', '123', 'Jordan'),
+    new Empleado(2, 'rafa@empresa.cl', '123', 'Rafa', '08:00', '17:50'),
+    new Empleado(3, 'pato@empresa.cl', '123', 'Pato', '08:00', '17:00')
 ];
 
-// Array simulando la BD de registros (Entradas y Salidas)
+// Array simulando la BD de registros usando la clase RegistroAsistencia
 const hoy = new Date();
 const registrosAsistencia = [
-    // ENTRADAS
-    { usuario_id: 2, tipo_accion: 'ENTRADA', timestamp: new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 7, 50, 0) }, 
-    { usuario_id: 3, tipo_accion: 'ENTRADA', timestamp: new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 8, 25, 0) },
-    // SALIDAS
-    { usuario_id: 2, tipo_accion: 'SALIDA', timestamp: new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 18, 5, 0) }, 
-    { usuario_id: 3, tipo_accion: 'SALIDA', timestamp: new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 14, 0, 0) } 
+    new RegistroAsistencia(2, 'ENTRADA', new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 7, 50, 0)), 
+    new RegistroAsistencia(3, 'ENTRADA', new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 8, 25, 0)),
+    new RegistroAsistencia(2, 'SALIDA', new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 18, 5, 0)), 
+    new RegistroAsistencia(3, 'SALIDA', new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 14, 0, 0)) 
 ];
 
 let usuarioActual = null;
@@ -63,23 +61,6 @@ formularioLogin.addEventListener('submit', (evento) => {
     }
 });
 
-// LÓGICA DE ASISTENCIA (Empleado)
-document.getElementById('btn-entrada').addEventListener('click', () => registrarMarcaje('ENTRADA'));
-document.getElementById('btn-salida').addEventListener('click', () => registrarMarcaje('SALIDA'));
-
-function registrarMarcaje(tipo) {
-    const fechaHora = new Date();
-    
-    registrosAsistencia.push({
-        usuario_id: usuarioActual.id,
-        tipo_accion: tipo,
-        timestamp: fechaHora
-    });
-
-    const horaFormateada = fechaHora.toLocaleTimeString('es-CL');
-    textoEstado.textContent = `Registro de ${tipo} guardado a las ${horaFormateada}`;
-    textoEstado.style.color = tipo === 'ENTRADA' ? '#198754' : '#dc3545';
-}
 
 // UTILIDADES 
 function iniciarReloj() {
@@ -113,7 +94,6 @@ document.getElementById('btn-generar-reporte').addEventListener('click', () => {
         return; 
     }
 
-    // Le agregamos la columna "Tipo" a la tabla para saber si evaluamos Entrada o Salida
     let htmlTabla = `
         <table>
             <thead>
@@ -128,7 +108,6 @@ document.getElementById('btn-generar-reporte').addEventListener('click', () => {
             <tbody>
     `;
 
-    // Ahora iteramos sobre TODOS los registros, no solo las entradas
     registrosAsistencia.forEach(registro => {
         const empleado = usuariosBD.find(u => u.id === registro.usuario_id);
         if (!empleado || !empleado.hora_entrada || !empleado.hora_salida) return; 
@@ -154,7 +133,6 @@ document.getElementById('btn-generar-reporte').addEventListener('click', () => {
         } else if (registro.tipo_accion === 'SALIDA') {
             const [horaEsp, minEsp] = empleado.hora_salida.split(':').map(Number);
             const minutosEsperados = (horaEsp * 60) + minEsp;
-            // Para la salida es al revés: Esperado - Real
             const diferencia = minutosEsperados - minutosReales;
             
             if (diferencia > 0) {

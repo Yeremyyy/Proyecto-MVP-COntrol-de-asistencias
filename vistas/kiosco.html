@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal QR - Kiosco</title>
+    <link rel="stylesheet" href="./style.css">
+    <!-- Librería externa para leer QR -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+    <div class="contenedor activa">
+        <div class="tarjeta tarjeta-ancha" style="text-align: center;">
+            <h2>Terminal de Acceso Rápido</h2>
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 20px; text-transform: uppercase;">Acerque su código QR a la cámara</p>
+            
+            <div id="lector-qr" style="width: 100%; max-width: 400px; margin: 0 auto; border: 2px solid #000; min-height: 300px; background: #000;"></div>
+            
+            <p id="mensaje-kiosco" class="texto-estado" style="font-size: 1.1rem; font-weight: bold; margin-top: 20px; min-height: 30px;"></p>
+            
+            <!-- Botón para regresar al login original -->
+            <button id="btn-volver" class="btn-texto">Volver al Login</button>
+        </div>
+    </div>
+
+    <!-- Script exclusivo para el kiosco -->
+    <script src="./kiosco.js"></script>
+</body>
+</html>
