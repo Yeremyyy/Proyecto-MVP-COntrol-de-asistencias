@@ -55,6 +55,7 @@ formularioLogin.addEventListener('submit', (evento) => {
             nombreUsuarioSpan.textContent = usuarioActual.nombre;
             vistaPanel.classList.add('activa'); 
             iniciarReloj();
+            renderizarCalendarioEmpleado();
         }
     } else {
         errorTexto.textContent = 'Credenciales incorrectas o usuario no existe.';

@@ -39,38 +39,32 @@
             <h2>Bienvenido, <span id="nombre-usuario"></span></h2>
             <p class="reloj" id="reloj-actual">00:00:00</p>
             
-            <div class="grupo-botones">
-                <button id="btn-entrada" class="btn-accion btn-entrada">Marcar Entrada</button>
-                <button id="btn-salida" class="btn-accion btn-salida">Marcar Salida</button>
-            </div>
             
-            <p id="mensaje-estado" class="texto-estado"></p>
-            
-            <!-- SECCIÓN: JUSTIFICACIÓN Y LICENCIAS MÉDICAS -->
-            <div style="margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; text-align: left;">
-                <h3 style="font-size: 1rem; margin-bottom: 15px; color: #333;">Justificar Ausencia / Atraso</h3>
+            <!-- SECCIÓN: CALENDARIO DE ASISTENCIA Y JUSTIFICACIÓN -->
+            <div style="margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; text-align: left;">
+                <h3 style="font-size: 1rem; margin-bottom: 15px; color: #333;">Mi Calendario de Asistencia</h3>
+                <p style="font-size: 0.75rem; color: #666; margin-bottom: 10px;">Haz clic en un día con inasistencia (rojo) para justificarlo.</p>
                 
-                <form id="formulario-justificacion">
-                    <div class="grupo-input">
-                        <label for="fecha-falta">Fecha de la incidencia</label>
-                        <input type="date" id="fecha-falta" required style="width: 100%; padding: 10px; border: 1px solid #ccc; outline: none; border-radius: 0;">
-                    </div>
-                    
-                    <div class="grupo-input">
-                        <label for="motivo-falta">Motivo Breve</label>
-                        <input type="text" id="motivo-falta" placeholder="Ej: Licencia médica, Problema de transporte..." required>
-                    </div>
-                    
-                    <div class="grupo-input">
-                        <label for="archivo-licencia">Adjuntar Documento (Imagen o PDF)</label>
-                        <input type="file" id="archivo-licencia" accept=".pdf, image/*" required style="border: none; padding: 0;">
-                    </div>
-                    
-                    <button type="submit" class="btn-primario" style="background-color: #0056b3;">Enviar a RRHH</button>
-                    
-                    <!-- Aquí mostraremos el estado de la validación -->
-                    <p id="mensaje-validacion" class="texto-estado" style="font-weight: bold; margin-top: 15px; min-height: 20px;"></p>
-                </form>
+                <!-- Cuadrícula del Calendario -->
+                <div id="calendario-empleado" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; text-align: center;">
+                    <!-- Se inyectará dinámicamente con JS -->
+                </div>
+
+                <!-- Formulario dinámico que aparece al seleccionar un día -->
+                <div id="contenedor-formulario-fecha" style="background: #f9f9f9; padding: 15px; border: 1px solid #ddd; display: none;">
+                    <h4 id="titulo-fecha-seleccionada" style="font-size: 0.9rem; margin-bottom: 10px; color: #000;">Justificar fecha: </h4>
+                    <form id="formulario-justificacion-calendario">
+                        <input type="hidden" id="fecha-objetivo">
+                        <div class="grupo-input">
+                            <input type="text" id="motivo-falta" placeholder="Motivo (Ej: Licencia médica, calamidad...)" required>
+                        </div>
+                        <div class="grupo-input">
+                            <input type="file" id="archivo-licencia-calendario" accept=".pdf, image/*" required style="border: none; padding: 0;">
+                        </div>
+                        <button type="submit" class="btn-primario" style="background-color: #0056b3; font-size: 0.8rem; padding: 8px;">Enviar Justificación</button>
+                        <p id="mensaje-validacion-calendario" class="texto-estado" style="font-size: 0.8rem; margin-top: 10px;"></p>
+                    </form>
+                </div>
             </div>
 
             <button id="btn-cerrar-sesion" class="btn-texto">Cerrar Sesión</button>
@@ -97,9 +91,7 @@
 
 
     <script src="../src/clases.js"></script>
-
     <script src="./app.js"></script>
-
     <script src="./empleado.js"></script>
 </body>
 </html>
