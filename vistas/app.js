@@ -73,8 +73,13 @@ function iniciarReloj() {
 
 document.getElementById('btn-cerrar-sesion').addEventListener('click', () => {
     usuarioActual = null;
-    textoEstado.textContent = '';
+    // Eliminamos la línea textoEstado.textContent = ''; porque ya no existe ese elemento
     clearInterval(intervaloReloj);
+    
+    // Ocultar el formulario del calendario por si quedó abierto
+    const formCalendario = document.getElementById('contenedor-formulario-fecha');
+    if (formCalendario) formCalendario.style.display = 'none';
+
     vistaPanel.classList.remove('activa');
     vistaLogin.classList.add('activa');
 });
