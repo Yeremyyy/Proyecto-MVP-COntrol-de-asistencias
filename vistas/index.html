@@ -23,8 +23,16 @@
                 <p id="mensaje-error" class="texto-error"></p>
                 <button type="submit" class="btn-primario">Iniciar Sesión</button>
             </form>
+            <div style="margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+                <p style="font-size: 0.7rem; color: #666; margin-bottom: 10px;">¿Entrada física a la empresa?</p>
+                <!-- Un enlace simple que reemplaza la ventana -->
+                <a href="kiosco.html" style="text-decoration: none;">
+                    <button type="button" class="btn-accion btn-entrada" style="width: 100%;">Modo Kiosco (Escanear QR)</button>
+                </a>
+            </div>
         </div>
     </div>
+    
 
     <div id="vista-panel" class="contenedor">
         <div class="tarjeta tarjeta-ancha">
@@ -38,6 +46,33 @@
             
             <p id="mensaje-estado" class="texto-estado"></p>
             
+            <!-- SECCIÓN: JUSTIFICACIÓN Y LICENCIAS MÉDICAS -->
+            <div style="margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; text-align: left;">
+                <h3 style="font-size: 1rem; margin-bottom: 15px; color: #333;">Justificar Ausencia / Atraso</h3>
+                
+                <form id="formulario-justificacion">
+                    <div class="grupo-input">
+                        <label for="fecha-falta">Fecha de la incidencia</label>
+                        <input type="date" id="fecha-falta" required style="width: 100%; padding: 10px; border: 1px solid #ccc; outline: none; border-radius: 0;">
+                    </div>
+                    
+                    <div class="grupo-input">
+                        <label for="motivo-falta">Motivo Breve</label>
+                        <input type="text" id="motivo-falta" placeholder="Ej: Licencia médica, Problema de transporte..." required>
+                    </div>
+                    
+                    <div class="grupo-input">
+                        <label for="archivo-licencia">Adjuntar Documento (Imagen o PDF)</label>
+                        <input type="file" id="archivo-licencia" accept=".pdf, image/*" required style="border: none; padding: 0;">
+                    </div>
+                    
+                    <button type="submit" class="btn-primario" style="background-color: #0056b3;">Enviar a RRHH</button>
+                    
+                    <!-- Aquí mostraremos el estado de la validación -->
+                    <p id="mensaje-validacion" class="texto-estado" style="font-weight: bold; margin-top: 15px; min-height: 20px;"></p>
+                </form>
+            </div>
+
             <button id="btn-cerrar-sesion" class="btn-texto">Cerrar Sesión</button>
         </div>
     </div>
@@ -60,6 +95,11 @@
         </div>
     </div>
 
+
+    <script src="../src/clases.js"></script>
+
     <script src="./app.js"></script>
+
+    <script src="./empleado.js"></script>
 </body>
 </html>
