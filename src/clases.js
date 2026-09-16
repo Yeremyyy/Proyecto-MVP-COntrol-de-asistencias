@@ -29,6 +29,12 @@ class Administrador extends Usuario {
         // El admin no tiene horarios fijos en esta etapa
     }
 }
+// RRHH
+class RecursosHumanos extends Usuario {
+    constructor(id, correo, contrasena, nombre) {
+        super(id, correo, contrasena, nombre, 'rrhh');
+    }
+}
 
 // 3. CLASES DE GESTIÓN (Transacciones)
 class RegistroAsistencia {
