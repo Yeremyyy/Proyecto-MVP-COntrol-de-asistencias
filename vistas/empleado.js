@@ -1,5 +1,3 @@
-
-// Variable para recordar qué día está abierto
 let fechaSeleccionada = null; 
 
 function renderizarCalendarioEmpleado() {
@@ -31,7 +29,6 @@ function renderizarCalendarioEmpleado() {
         celda.style.fontSize = '0.85rem';
         celda.style.cursor = 'pointer';
         celda.style.border = '1px solid #e0e0e0';
-        // Agregamos una transición suave para cuando el usuario haga clic
         celda.style.transition = 'transform 0.1s ease-in-out, background-color 0.2s';
 
         const fechaStr = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
@@ -44,45 +41,37 @@ function renderizarCalendarioEmpleado() {
         const esDiaPasado = new Date(fechaStr) <= new Date();
 
         if (asistenciaDia) {
-            // Días asistidos (Verde)
             celda.style.backgroundColor = '#d1e7dd';
             celda.style.color = '#0f5132';
             celda.title = 'Asistencia registrada';
             celda.addEventListener('click', () => ocultarFormulario());
             
         } else if (esDiaPasado && dia < hoy.getDate()) {
-            // Días inasistentes (Rojo)
             celda.style.backgroundColor = '#f8d7da';
             celda.style.color = '#842029';
             celda.title = 'Inasistencia - Clic para justificar';
 
-            // LÓGICA DE TOGGLE Y ANIMACIÓN
             celda.addEventListener('click', () => {
-                // Pequeño rebote visual al hacer clic
                 celda.style.transform = 'scale(0.90)';
                 setTimeout(() => celda.style.transform = 'scale(1)', 100);
 
                 const form = document.getElementById('contenedor-formulario-fecha');
                 
                 if (fechaSeleccionada === fechaStr) {
-                    // Si toca el mismo día que ya está abierto, lo cierra
                     ocultarFormulario();
                 } else {
-                    // Si toca un día nuevo, abre el form con transición
                     fechaSeleccionada = fechaStr;
                     form.style.display = 'block';
                     
-                    // Animación de aparición (Fade In)
                     form.style.opacity = '0';
                     form.style.transition = 'opacity 0.3s ease';
                     setTimeout(() => form.style.opacity = '1', 10);
                     
-                    document.getElementById('titulo-fecha-seleccionada').textContent = `Justificar inasistencia del día: ${fechaStr}`;
+                    document.getElementById('titulo-fecha-seleccionada').textContent = `Justificar inasistencia del dia: ${fechaStr}`;
                     document.getElementById('fecha-objetivo').value = fechaStr;
                 }
             });
         } else {
-            // Días futuros (Gris)
             celda.style.backgroundColor = '#f8f9fa';
             celda.style.color = '#6c757d';
             celda.addEventListener('click', () => ocultarFormulario());
@@ -92,12 +81,10 @@ function renderizarCalendarioEmpleado() {
     }
 }
 
-// Función auxiliar para cerrar el formulario con animación
 function ocultarFormulario() {
     const form = document.getElementById('contenedor-formulario-fecha');
-    if (form.style.display === 'block') {
+    if (form && form.style.display === 'block') {
         form.style.opacity = '0';
-        // Espera a que termine la animación antes de quitarlo del HTML
         setTimeout(() => {
             form.style.display = 'none';
             fechaSeleccionada = null;
@@ -105,7 +92,6 @@ function ocultarFormulario() {
     }
 }
 
-// Lógica del motor OCR simulado
 const formularioJustificacionCalendario = document.getElementById('formulario-justificacion-calendario');
 if (formularioJustificacionCalendario) {
     formularioJustificacionCalendario.addEventListener('submit', (evento) => {
@@ -128,10 +114,73 @@ if (formularioJustificacionCalendario) {
 
             setTimeout(() => {
                 formularioJustificacionCalendario.reset();
-                ocultarFormulario(); // Usamos la nueva función para cerrarlo suavemente
+                ocultarFormulario(); 
                 mensajeValidacion.textContent = "";
             }, 4000);
 
         }, 2000); 
     });
 }
+
+const btnToggleCalendario = document.getElementById('btn-toggle-calendario');
+const seccionCalendario = document.getElementById('seccion-calendario');
+
+if (btnToggleCalendario && seccionCalendario) {
+    btnToggleCalendario.addEventListener('click', () => {
+        if (seccionCalendario.style.display === 'none') {
+            seccionCalendario.style.display = 'block';
+            btnToggleCalendario.textContent = 'Ocultar Calendario';
+        } else {
+            seccionCalendario.style.display = 'none';
+            btnToggleCalendario.textContent = 'Ver mi Calendario de Asistencia';
+        }
+    });
+}
+
+// FUNCION: GENERAR QR DINAMICO CON CONTADOR VISUAL
+let intervaloQR = null;
+let intervaloContador = null;
+
+window.generarQrEmpleado = function() {
+    if (!usuarioActual) return;
+    const canvas = document.getElementById('qr-empleado');
+    const textoContador = document.getElementById('qr-contador');
+    
+    if (canvas) {
+        let tiempoRestante = 30; // El QR caduca cada 30 segundos
+
+        function actualizarQR() {
+            const tiempoActual = Date.now();
+            const bloqueTiempo = Math.floor(tiempoActual / 30000); 
+            const tokenSeguridad = `${usuarioActual.id}-${bloqueTiempo}`;
+
+            new QRious({
+                element: canvas,
+                value: tokenSeguridad,
+                size: 200,
+                background: 'white',
+                foreground: 'black',
+                level: 'H' 
+            });
+            
+            tiempoRestante = 30; // Resetea el reloj al redibujar
+        }
+
+        function actualizarContador() {
+            tiempoRestante--;
+            if (tiempoRestante <= 0) {
+                actualizarQR();
+            }
+            if (textoContador) {
+                textoContador.textContent = `Actualizacion automatica en: ${tiempoRestante} segundos`;
+            }
+        }
+
+        actualizarQR(); 
+        
+        if (intervaloQR) clearInterval(intervaloQR);
+        if (intervaloContador) clearInterval(intervaloContador);
+        
+        intervaloContador = setInterval(actualizarContador, 1000);
+    }
+};

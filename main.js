@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, session } = require('electron');
 const path = require('path');
 
 function createWindow() {
@@ -17,6 +17,15 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+    // Permisos automáticos para la Cámara Web
+    session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+        if (permission === 'media') {
+            callback(true); 
+        } else {
+            callback(false);
+        }
+    });
+
     createWindow();
 
     app.on('activate', () => {

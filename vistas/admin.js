@@ -1,20 +1,26 @@
+/* ==========================================
+   MODULO ADMINISTRADOR (Dashboard & CRUD)
+========================================== */
 
 const menuPrincipal = document.getElementById('menu-admin-principal');
+
 const modulos = {
     reportes: document.getElementById('modulo-reportes'),
     crear: document.getElementById('modulo-crear'),
-    gestionar: document.getElementById('modulo-gestionar'),
-    qr: document.getElementById('modulo-qr')
+    gestionar: document.getElementById('modulo-gestionar')
 };
 
 function abrirModulo(moduloHtml) {
     if(!menuPrincipal || !moduloHtml) return;
     menuPrincipal.style.display = 'none';
-    Object.values(modulos).forEach(mod => mod.style.display = 'none');
+    
+    Object.values(modulos).forEach(mod => {
+        if (mod) mod.style.display = 'none';
+    });
+    
     moduloHtml.style.display = 'block';
 }
 
-// Navegación
 document.getElementById('btn-menu-reportes')?.addEventListener('click', () => {
     abrirModulo(modulos.reportes);
     renderizarTablaReportes();
@@ -24,16 +30,17 @@ document.getElementById('btn-menu-gestionar')?.addEventListener('click', () => {
     abrirModulo(modulos.gestionar);
     renderizarTablaUsuarios();
 });
-document.getElementById('btn-menu-qr')?.addEventListener('click', () => abrirModulo(modulos.qr));
 
 document.querySelectorAll('.btn-volver').forEach(btn => {
     btn.addEventListener('click', () => {
-        Object.values(modulos).forEach(mod => mod.style.display = 'none');
+        Object.values(modulos).forEach(mod => {
+            if (mod) mod.style.display = 'none';
+        });
         menuPrincipal.style.display = 'grid'; 
     });
 });
 
-/* --- LÓGICA DE REPORTES UNIFICADOS --- */
+/* --- LOGICA DE REPORTES --- */
 function renderizarTablaReportes() {
     const contenedor = document.getElementById('contenedor-reporte');
     const empleados = usuariosBD.filter(u => u.rol === 'empleado'); 
@@ -50,7 +57,7 @@ function renderizarTablaReportes() {
                     <th style="padding: 10px 5px;">Empleado</th>
                     <th style="padding: 10px 5px;">Horario Asignado</th>
                     <th style="padding: 10px 5px;">Estado General</th>
-                    <th style="padding: 10px 5px;">Descargar</th>
+                    <th style="padding: 10px 5px;">Accion</th>
                 </tr>
             </thead>
             <tbody>
@@ -71,7 +78,7 @@ function renderizarTablaReportes() {
 
             if (minRealesTotal > minEsperadosTotal) {
                 const minutosTarde = minRealesTotal - minEsperadosTotal;
-                estado = `Infracción (Atraso ${minutosTarde} min)`;
+                estado = `Infraccion (${minutosTarde} min)`;
                 colorEstado = '#dc3545';
             } else {
                 estado = 'Jornada Cumplida';
@@ -85,7 +92,7 @@ function renderizarTablaReportes() {
                 <td style="padding: 10px 5px;">${emp.hora_entrada} - ${emp.hora_salida}</td>
                 <td style="padding: 10px 5px; color: ${colorEstado}; font-weight: bold;">${estado}</td>
                 <td style="padding: 10px 5px;">
-                    <button onclick="descargarReporteIndividual(${emp.id}, '${emp.nombre}')" class="btn-texto" style="color: #0056b3; font-weight: bold; text-decoration: underline; padding: 0;">Descargar PDF</button>
+                    <button onclick="descargarReporteIndividual(${emp.id}, '${emp.nombre}')" class="btn-texto" style="color: #0056b3; font-weight: bold; text-decoration: underline; padding: 0;">Ver Registros (PDF)</button>
                 </td>
             </tr>
         `;
@@ -95,27 +102,147 @@ function renderizarTablaReportes() {
     contenedor.innerHTML = html;
 }
 
-window.descargarReporteIndividual = function(id, nombre) {
-    alert(`Generando reporte PDF individual para: ${nombre}...`);
-}
-
+// PDF DETALLADO: REPORTE GENERAL
 window.descargarReporteTotal = function() {
-    alert(`Generando reporte global en Excel/PDF con todos los empleados...`);
+    if (!window.jspdf) {
+        alert("La libreria de PDF esta cargando. Por favor, espere un segundo.");
+        return;
+    }
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('landscape'); // Formato horizontal para mas datos
+    
+    doc.setFontSize(18);
+    doc.text("Reporte General de Asistencia y Atrasos", 14, 22);
+    doc.setFontSize(11);
+    doc.text(`Fecha de emision: ${new Date().toLocaleDateString('es-CL')}`, 14, 30);
+    
+    const empleados = usuariosBD.filter(u => u.rol === 'empleado');
+    const data = empleados.map(emp => {
+        const regEntrada = registrosAsistencia.find(reg => reg.usuario_id === emp.id && reg.tipo_accion === 'ENTRADA');
+        const regSalida = registrosAsistencia.find(reg => reg.usuario_id === emp.id && reg.tipo_accion === 'SALIDA');
+        
+        let entradaReal = 'Sin marcar';
+        let salidaReal = 'Sin marcar';
+        let estado = 'Ausente';
+        let infraccion = '0 min';
+        
+        if (regEntrada) {
+            entradaReal = regEntrada.timestamp.toLocaleTimeString('es-CL', {hour: '2-digit', minute:'2-digit'});
+            const horaReal = regEntrada.timestamp.getHours();
+            const minReal = regEntrada.timestamp.getMinutes();
+            const [horaEsp, minEsp] = emp.hora_entrada.split(':').map(Number);
+            const diffEntrada = (horaReal * 60 + minReal) - (horaEsp * 60 + minEsp);
+            
+            if (diffEntrada > 0) {
+                estado = 'Atraso';
+                infraccion = `${diffEntrada} min`;
+            } else {
+                estado = 'Al dia';
+            }
+        }
+        
+        if (regSalida) {
+            salidaReal = regSalida.timestamp.toLocaleTimeString('es-CL', {hour: '2-digit', minute:'2-digit'});
+            const horaRealS = regSalida.timestamp.getHours();
+            const minRealS = regSalida.timestamp.getMinutes();
+            const [horaEspS, minEspS] = emp.hora_salida.split(':').map(Number);
+            const diffSalida = (horaEspS * 60 + minEspS) - (horaRealS * 60 + minRealS);
+            
+            if (diffSalida > 0) {
+                estado = estado === 'Atraso' ? 'Atraso / Salida Anticipada' : 'Salida Anticipada';
+                infraccion = infraccion === '0 min' ? `${diffSalida} min` : `${parseInt(infraccion) + diffSalida} min total`;
+            }
+        }
+
+        return [
+            emp.id, 
+            emp.nombre, 
+            emp.rut || 'No registrado', 
+            `${emp.hora_entrada} - ${emp.hora_salida}`, 
+            entradaReal, 
+            salidaReal, 
+            estado, 
+            infraccion
+        ];
+    });
+
+    doc.autoTable({
+        startY: 40,
+        head: [['ID', 'Empleado', 'RUT', 'Horario Asignado', 'Entrada Real', 'Salida Real', 'Estado', 'Infraccion']],
+        body: data,
+        theme: 'grid',
+        headStyles: { fillColor: [51, 51, 51] }
+    });
+    
+    window.open(doc.output('bloburl'), '_blank');
 }
 
-/* --- LÓGICA CREAR USUARIOS (VALIDACIONES ESTRICTAS) --- */
-/* --- LÓGICA CREAR USUARIOS (MÁSCARAS Y AUTOFORMATO) --- */
-const formCrearUsuario = document.getElementById('formulario-crear-usuario');
+// PDF DETALLADO: REPORTE INDIVIDUAL
+window.descargarReporteIndividual = function(id, nombre) {
+    if (!window.jspdf) return;
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const emp = usuariosBD.find(u => u.id === id);
+    
+    doc.setFontSize(18);
+    doc.text(`Ficha de Asistencia: ${nombre}`, 14, 22);
+    doc.setFontSize(11);
+    doc.text(`RUT: ${emp.rut || 'No registrado'}  |  Telefono: ${emp.telefono || 'No registrado'}`, 14, 32);
+    doc.text(`Correo Corporativo: ${emp.correo}`, 14, 38);
+    doc.text(`Horario Contractual: ${emp.hora_entrada} - ${emp.hora_salida}`, 14, 44);
+    doc.text(`Documento generado el ${new Date().toLocaleDateString('es-CL')} a las ${new Date().toLocaleTimeString('es-CL')}`, 14, 50);
+    
+    const registros = registrosAsistencia.filter(reg => reg.usuario_id === id);
+    registros.sort((a, b) => a.timestamp - b.timestamp);
+    
+    const data = registros.map(reg => {
+        const fecha = reg.timestamp.toLocaleDateString('es-CL');
+        const hora = reg.timestamp.toLocaleTimeString('es-CL', {hour: '2-digit', minute:'2-digit'});
+        let estado = 'OK';
+        let obs = 'A tiempo';
+        
+        if (reg.tipo_accion === 'ENTRADA') {
+            const [hE, mE] = emp.hora_entrada.split(':').map(Number);
+            const diff = (reg.timestamp.getHours() * 60 + reg.timestamp.getMinutes()) - (hE * 60 + mE);
+            if (diff > 0) {
+                estado = 'INFRACCION';
+                obs = `Llego ${diff} min tarde`;
+            }
+        } else if (reg.tipo_accion === 'SALIDA') {
+            const [hS, mS] = emp.hora_salida.split(':').map(Number);
+            const diff = (hS * 60 + mS) - (reg.timestamp.getHours() * 60 + reg.timestamp.getMinutes());
+            if (diff > 0) {
+                estado = 'INFRACCION';
+                obs = `Se retiro ${diff} min antes`;
+            }
+        }
+
+        return [fecha, reg.tipo_accion, hora, estado, obs];
+    });
+
+    doc.autoTable({
+        startY: 60,
+        head: [['Fecha', 'Tipo de Marca', 'Hora Registrada', 'Estado', 'Detalle/Observacion']],
+        body: data.length > 0 ? data : [['Sin historial', '-', '-', '-', '-']],
+        theme: 'grid',
+        headStyles: { fillColor: [13, 110, 253] }
+    });
+    
+    window.open(doc.output('bloburl'), '_blank');
+}
+
+/* --- LOGICA CREAR USUARIOS (SOLUCION DEL BUG) --- */
 const inputNombre = document.getElementById('nuevo-nombre');
 const inputPaterno = document.getElementById('nuevo-paterno');
 const inputMaterno = document.getElementById('nuevo-materno');
 const inputRut = document.getElementById('nuevo-rut');
 const inputTelefono = document.getElementById('nuevo-telefono');
 const inputCorreo = document.getElementById('nuevo-correo');
-const inputPass = document.getElementById('nueva-pass');
+const inputPass = document.getElementById('nueva-pass'); // AQUI ESTABA EL ERROR: Ya esta corregido
 const mensajeCreacion = document.getElementById('mensaje-creacion');
 
-// Validación y limpieza de nombres en tiempo real
 [inputNombre, inputPaterno, inputMaterno].forEach(input => {
     if (input) {
         input.addEventListener('input', function() {
@@ -125,14 +252,12 @@ const mensajeCreacion = document.getElementById('mensaje-creacion');
     }
 });
 
-// Teléfono: Estricto a 8 dígitos numéricos
 if (inputTelefono) {
     inputTelefono.addEventListener('input', function() {
         this.value = this.value.replace(/[^0-9]/g, '').substring(0, 8); 
     });
 }
 
-// MÁSCARA AUTOMÁTICA DE RUT (Ej: 12.345.678-9)
 if (inputRut) {
     inputRut.addEventListener('input', function(e) {
         let valor = this.value.replace(/[^0-9kK]/g, '').toUpperCase();
@@ -150,7 +275,6 @@ if (inputRut) {
         
         this.value = rutFormateado;
 
-        // Autogenerar contraseña con los primeros 4 dígitos numéricos del RUT
         let soloNumeros = valor.replace(/[^0-9]/g, '');
         if (inputPass) {
             inputPass.value = soloNumeros.length >= 4 ? soloNumeros.substring(0, 4) : '';
@@ -158,7 +282,6 @@ if (inputRut) {
     });
 }
 
-// Generador de correo corporativo inteligente (ej: p.ramirez@empresa.cl)
 function generarCorreo() {
     if (!inputNombre || !inputPaterno || !inputCorreo) return;
     
@@ -174,13 +297,24 @@ function generarCorreo() {
     }
 }
 
-if (formCrearUsuario) {
-    formCrearUsuario.addEventListener('submit', (evento) => {
-        evento.preventDefault();
+// CONTROL MANUAL DEL BOTON DE GUARDADO (EVITA EL BLOQUEO DEL NAVEGADOR)
+const btnGuardarEmpleado = document.getElementById('btn-guardar-empleado');
+if (btnGuardarEmpleado) {
+    btnGuardarEmpleado.addEventListener('click', () => {
         
+        // Verifica si las variables existen para evitar crasheos
+        if (!inputNombre || !inputRut || !inputCorreo || !inputPass) return;
+
+        // Validacion estricta manual
+        if (!inputNombre.value.trim() || !inputRut.value.trim() || !inputCorreo.value.trim() || !inputPass.value.trim()) {
+            mensajeCreacion.textContent = 'Error: Por favor, complete todos los campos obligatorios.';
+            mensajeCreacion.style.color = '#dc3545';
+            return;
+        }
+
         const nombreCompleto = `${inputNombre.value.trim()} ${inputPaterno.value.trim()} ${inputMaterno.value.trim()}`;
         const rut = inputRut.value.trim();
-        const telefono = `+56 9 ${inputTelefono.value.trim()}`; // Guardamos con formato completo
+        const telefono = `+56 9 ${inputTelefono.value.trim()}`;
         const direccion = document.getElementById('nueva-direccion').value.trim();
         const correo = inputCorreo.value; 
         const pass = inputPass.value;     
@@ -199,7 +333,9 @@ if (formCrearUsuario) {
         mensajeCreacion.textContent = `Registro exitoso. Correo corporativo: ${correo}`;
         mensajeCreacion.style.color = '#198754'; 
         
-        formCrearUsuario.reset();
+        const formCrear = document.getElementById('formulario-crear-usuario');
+        if (formCrear) formCrear.reset();
+        
         inputCorreo.value = '';
         inputPass.value = '';
         
@@ -207,7 +343,7 @@ if (formCrearUsuario) {
     });
 }
 
-/* --- LÓGICA GESTIÓN (EDITAR / ELIMINAR) --- */
+/* --- LOGICA GESTION (EDITAR / ELIMINAR) --- */
 function renderizarTablaUsuarios() {
     const contenedorTabla = document.getElementById('tabla-usuarios');
     const empleados = usuariosBD.filter(u => u.rol === 'empleado'); 
@@ -281,7 +417,7 @@ window.guardarEdicion = function() {
         
         document.getElementById('caja-edicion').style.display = 'none';
         renderizarTablaUsuarios(); 
-        alert('Información del empleado actualizada correctamente.');
+        alert('Informacion del empleado actualizada correctamente.');
     }
 }
 

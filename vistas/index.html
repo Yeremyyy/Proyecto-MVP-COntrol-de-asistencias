@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Asistencia</title>
     <link rel="stylesheet" href="./style.css">
+    
+    <!-- Libreria para generar el QR en el celular -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    
+    <!-- Librerias para generar archivos PDF reales y detallados -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
@@ -14,18 +21,18 @@
             <h2>Ingreso al Sistema</h2>
             <form id="formulario-login">
                 <div class="grupo-input">
-                    <label for="correo">Correo Electrónico</label>
+                    <label for="correo">Correo Electronico</label>
                     <input type="email" id="correo" required>
                 </div>
                 <div class="grupo-input">
-                    <label for="contrasena">Contraseña</label>
+                    <label for="contrasena">Contrasena</label>
                     <input type="password" id="contrasena" required>
                 </div>
                 <p id="mensaje-error" class="texto-error"></p>
-                <button type="submit" class="btn-primario">Iniciar Sesión</button>
+                <button type="submit" class="btn-primario">Iniciar Sesion</button>
             </form>
             <div style="margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
-                <p style="font-size: 0.7rem; color: #666; margin-bottom: 10px;">¿Entrada física a la empresa?</p>
+                <p style="font-size: 0.7rem; color: #666; margin-bottom: 10px;">¿Entrada fisica a la empresa?</p>
                 <a href="kiosco.html" style="text-decoration: none;">
                     <button type="button" class="btn-accion btn-entrada" style="width: 100%;">Modo Kiosco (Escanear QR)</button>
                 </a>
@@ -39,9 +46,17 @@
             <h2>Bienvenido, <span id="nombre-usuario"></span></h2>
             <p class="reloj" id="reloj-actual">00:00:00</p>
             
-            <div style="margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; text-align: left;">
+            <div style="text-align: center; margin-top: 20px; padding: 20px; background: #fff; border-radius: 8px; border: 2px dashed #333;">
+                <h3 style="font-size: 1.1rem; color: #333; margin-bottom: 10px;">Credencial de Acceso Dinamica</h3>
+                <canvas id="qr-empleado"></canvas>
+                <p id="qr-contador" style="font-size: 0.85rem; color: #dc3545; margin-top: 10px; font-weight: bold;">Calculando tiempo...</p>
+            </div>
+            
+            <button id="btn-toggle-calendario" class="btn-texto" style="margin-top: 20px; width: 100%; border: 1px solid #ccc; padding: 12px; font-weight: bold; background-color: #f8f9fa;">Ver mi Calendario de Asistencia</button>
+            
+            <div id="seccion-calendario" style="display: none; margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px; text-align: left;">
                 <h3 style="font-size: 1rem; margin-bottom: 15px; color: #333;">Mi Calendario de Asistencia</h3>
-                <p style="font-size: 0.75rem; color: #666; margin-bottom: 10px;">Haz clic en un día con inasistencia (rojo) para justificarlo.</p>
+                <p style="font-size: 0.75rem; color: #666; margin-bottom: 10px;">Seleccione un dia inasistente (rojo) para justificar.</p>
                 
                 <div id="calendario-empleado" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; text-align: center;"></div>
 
@@ -50,60 +65,57 @@
                     <form id="formulario-justificacion-calendario">
                         <input type="hidden" id="fecha-objetivo">
                         <div class="grupo-input">
-                            <input type="text" id="motivo-falta" placeholder="Motivo (Ej: Licencia médica, calamidad...)" required>
+                            <input type="text" id="motivo-falta" placeholder="Motivo (Ej: Licencia medica)" required style="width: 100%; padding: 8px; border: 1px solid #ccc;">
                         </div>
                         <div class="grupo-input">
                             <input type="file" id="archivo-licencia-calendario" accept=".pdf, image/*" required style="border: none; padding: 0;">
                         </div>
-                        <button type="submit" class="btn-primario" style="background-color: #0056b3; font-size: 0.8rem; padding: 8px;">Enviar Justificación</button>
+                        <button type="submit" class="btn-primario" style="background-color: #333; font-size: 0.8rem; padding: 8px;">Enviar Justificacion</button>
                         <p id="mensaje-validacion-calendario" class="texto-estado" style="font-size: 0.8rem; margin-top: 10px;"></p>
                     </form>
                 </div>
             </div>
 
-            <button id="btn-cerrar-sesion" class="btn-texto">Cerrar Sesión</button>
+            <button id="btn-cerrar-sesion" class="btn-texto" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; width: 100%;">Cerrar Sesion</button>
         </div>
     </div>
 
     <!-- VISTA 3: PANEL DE ADMINISTRADOR -->
     <div id="vista-admin" class="contenedor">
         <div class="tarjeta tarjeta-ancha">
-            <h2>Panel de Administración</h2>
+            <h2>Panel de Administracion</h2>
             <p style="font-size: 0.8rem; color: #666; text-transform: uppercase; margin-bottom: 20px;">
-                Sesión: <span id="nombre-admin" style="font-weight: bold; color: #000;"></span>
+                Sesion: <span id="nombre-admin" style="font-weight: bold; color: #000;"></span>
             </p>
             
-            <!-- LA BOTONERA PRINCIPAL -->
-            <div id="menu-admin-principal" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div id="menu-admin-principal" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <button id="btn-menu-reportes" class="btn-texto" style="padding: 15px; font-size: 0.9rem; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #333;">Generar Reportes</button>
                 <button id="btn-menu-crear" class="btn-texto" style="padding: 15px; font-size: 0.9rem; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #333;">Registrar Usuario</button>
                 <button id="btn-menu-gestionar" class="btn-texto" style="padding: 15px; font-size: 0.9rem; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #333;">Actualizar / Eliminar</button>
-                <button id="btn-menu-qr" class="btn-texto" style="padding: 15px; font-size: 0.9rem; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #333;">Generar QR Único</button>
             </div>
 
-            <!-- MÓDULO 1: REPORTES -->
+            <!-- MODULO 1: REPORTES -->
             <div id="modulo-reportes" style="display: none; text-align: left;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
                     <h3 style="font-size: 1.1rem; color: #333; margin: 0;">Reporte Diario</h3>
-                    <button class="btn-texto btn-volver" style="color: #dc3545; font-weight: bold; text-decoration: underline;">Volver al Menú</button>
+                    <button class="btn-texto btn-volver" style="color: #dc3545; font-weight: bold; text-decoration: underline;">Volver al Menu</button>
                 </div>
                 
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
-                    <button onclick="descargarReporteTotal()" class="btn-primario" style="background-color: #0056b3; padding: 8px 15px; font-size: 0.85rem; width: auto;">Descargar Reporte Total</button>
+                    <button onclick="descargarReporteTotal()" class="btn-primario" style="background-color: #0056b3; padding: 8px 15px; font-size: 0.85rem; width: auto;">Ver Reporte General (PDF)</button>
                 </div>
                 
                 <div id="contenedor-reporte" style="overflow-x: auto;"></div>
             </div>
 
-            <!-- MÓDULO 2: CREAR USUARIO -->
+            <!-- MODULO 2: CREAR USUARIO -->
             <div id="modulo-crear" style="display: none; text-align: left;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
                     <h3 style="font-size: 1.1rem; color: #333; margin: 0;">Registrar Nuevo Empleado</h3>
-                    <button class="btn-texto btn-volver" style="color: #dc3545; font-weight: bold; text-decoration: underline;">Volver al Menú</button>
+                    <button class="btn-texto btn-volver" style="color: #dc3545; font-weight: bold; text-decoration: underline;">Volver al Menu</button>
                 </div>
                 
                 <form id="formulario-crear-usuario">
-                    <!-- Fila 1: Nombres -->
                     <div style="display: flex; gap: 15px; margin-bottom: 15px;">
                         <div style="flex: 1;">
                             <label for="nuevo-nombre">Nombre</label>
@@ -119,40 +131,37 @@
                         </div>
                     </div>
 
-                    <!-- Fila 2: Identificación y Teléfono con formato chileno -->
                     <div style="display: flex; gap: 15px; margin-bottom: 15px;">
                         <div style="flex: 1;">
-                            <label for="nuevo-rut">RUT (Autoformato)</label>
-                            <input type="text" id="nuevo-rut" required placeholder="12.345.678-9" maxlength="12" style="width: 100%; padding: 10px; border: 1px solid #ccc;">
+                            <label for="nuevo-rut">RUT (Solo ingresa numeros)</label>
+                            <input type="text" id="nuevo-rut" required placeholder="Ej: 123456789" maxlength="12" style="width: 100%; padding: 10px; border: 1px solid #ccc;">
                         </div>
                         <div style="flex: 1;">
-                            <label for="nuevo-telefono">Teléfono Celular</label>
+                            <label for="nuevo-telefono">Telefono Celular</label>
                             <div style="display: flex; align-items: center; border: 1px solid #ccc; background: #fff;">
-                                <span style="padding: 0 10px; background: #e9ecef; color: #555; font-weight: bold; border-right: 1px solid #ccc; height: 100%; display: flex; align-items: center;">+56 9</span>
+                                <span style="padding: 10px; background: #e9ecef; color: #555; font-weight: bold; border-right: 1px solid #ccc; white-space: nowrap;">+56 9</span>
                                 <input type="text" id="nuevo-telefono" required placeholder="12345678" maxlength="8" style="width: 100%; padding: 10px; border: none; outline: none;">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Fila 3: Dirección -->
                     <div style="margin-bottom: 15px;">
-                        <label for="nueva-direccion">Dirección Completa</label>
+                        <label for="nueva-direccion">Direccion Completa</label>
                         <input type="text" id="nueva-direccion" required style="width: 100%; padding: 10px; border: 1px solid #ccc;">
                     </div>
                     
-                    <!-- Fila 4: Correo y Pass (Automáticos) -->
                     <div style="display: flex; gap: 15px; margin-bottom: 15px;">
                         <div style="flex: 2;">
-                            <label for="nuevo-correo">Correo Corporativo (Autogenerado)</label>
-                            <input type="email" id="nuevo-correo" disabled style="width: 100%; padding: 10px; border: 1px solid #ccc; background-color: #e9ecef; color: #555; font-weight: bold;">
+                            <label for="nuevo-correo">Correo Corporativo</label>
+                            <input type="email" id="nuevo-correo" required style="width: 100%; padding: 10px; border: 1px solid #ccc; background-color: #f8f9fa;">
                         </div>
                         <div style="flex: 1;">
-                            <label for="nueva-pass">Contraseña (Autogenerada)</label>
-                            <input type="text" id="nueva-pass" disabled style="width: 100%; padding: 10px; border: 1px solid #ccc; background-color: #e9ecef; color: #555; font-weight: bold;">
+                            <label for="nueva-pass">Contrasena Asignada</label>
+                            <!-- AQUI ESTABA EL ERROR DEL ID: Ya esta homologado a nueva-pass -->
+                            <input type="text" id="nueva-pass" required style="width: 100%; padding: 10px; border: 1px solid #ccc; background-color: #f8f9fa;">
                         </div>
                     </div>
 
-                    <!-- Fila 5: Horarios -->
                     <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                         <div style="flex: 1;">
                             <label for="nueva-entrada">Hora Entrada asignada</label>
@@ -163,16 +172,17 @@
                             <input type="time" id="nueva-salida" required value="17:00" style="width: 100%; padding: 10px; border: 1px solid #ccc;">
                         </div>
                     </div>
-                    <button type="submit" class="btn-primario" style="background-color: #333;">Guardar Registro</button>
+                    
+                    <button type="button" id="btn-guardar-empleado" class="btn-primario" style="background-color: #333;">Guardar Registro</button>
                     <p id="mensaje-creacion" class="texto-estado" style="font-weight: bold; margin-top: 15px; min-height: 20px;"></p>
                 </form>
             </div>
 
-            <!-- MÓDULO 3: GESTIONAR -->
+            <!-- MODULO 3: GESTIONAR -->
             <div id="modulo-gestionar" style="display: none; text-align: left;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
                     <h3 style="font-size: 1.1rem; color: #333; margin: 0;">Directorio de Empleados</h3>
-                    <button class="btn-texto btn-volver" style="color: #dc3545; font-weight: bold; text-decoration: underline;">Volver al Menú</button>
+                    <button class="btn-texto btn-volver" style="color: #dc3545; font-weight: bold; text-decoration: underline;">Volver al Menu</button>
                 </div>
                 
                 <div id="caja-edicion" style="display: none; background: #f8f9fa; padding: 15px; border: 1px solid #ddd; margin-bottom: 15px;">
@@ -189,17 +199,8 @@
 
                 <div id="tabla-usuarios" style="margin-top: 15px; overflow-x: auto;"></div>
             </div>
-
-            <!-- MÓDULO 4: QR -->
-            <div id="modulo-qr" style="display: none; text-align: left;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-                    <h3 style="font-size: 1.1rem; color: #333; margin: 0;">Generador de Código QR</h3>
-                    <button class="btn-texto btn-volver" style="color: #dc3545; font-weight: bold; text-decoration: underline;">Volver al Menú</button>
-                </div>
-                <p class="texto-estado">Módulo listo para conectar la librería de generación de acceso.</p>
-            </div>
             
-            <button id="btn-cerrar-sesion-admin" class="btn-texto" style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 15px; width: 100%;">Cerrar Sesión</button>
+            <button id="btn-cerrar-sesion-admin" class="btn-texto" style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 15px; width: 100%;">Cerrar Sesion</button>
         </div>
     </div>
 
