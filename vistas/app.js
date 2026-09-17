@@ -1,12 +1,10 @@
 // 1. BASE DE DATOS SIMULADA (MOCK) USANDO CLASES (POO)
 const usuariosBD = [
-    // Instanciamos usando las clases de src/clases.js
     new Administrador(1, 'jordan@empresa.cl', '123', 'Jordan'),
     new Empleado(2, 'rafa@empresa.cl', '123', 'Rafa', '08:00', '17:50'),
     new Empleado(3, 'pato@empresa.cl', '123', 'Pato', '08:00', '17:00')
 ];
 
-// Array simulando la BD de registros usando la clase RegistroAsistencia
 const hoy = new Date();
 const registrosAsistencia = [
     new RegistroAsistencia(2, 'ENTRADA', new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 7, 50, 0)), 
@@ -26,142 +24,117 @@ const errorTexto = document.getElementById('mensaje-error');
 const nombreUsuarioSpan = document.getElementById('nombre-usuario');
 const nombreAdminSpan = document.getElementById('nombre-admin'); 
 const relojTexto = document.getElementById('reloj-actual');
-const textoEstado = document.getElementById('mensaje-estado');
 
-// LÓGICA DE LOGIN Y RUTEO 
-formularioLogin.addEventListener('submit', (evento) => {
-    evento.preventDefault(); 
-    
-    const correoIngresado = document.getElementById('correo').value.trim();
-    const passIngresada = document.getElementById('contrasena').value.trim();
-
-    if (!correoIngresado || !passIngresada) {
-        errorTexto.textContent = 'Por favor, complete todos los campos.';
-        return; 
-    }
-
-    const usuarioEncontrado = usuariosBD.find(u => u.correo === correoIngresado && u.contrasena === passIngresada);
-
-    if (usuarioEncontrado) {
-        usuarioActual = usuarioEncontrado;
-        errorTexto.textContent = '';
-        formularioLogin.reset();
-        vistaLogin.classList.remove('activa');
+// LOGICA DE LOGIN Y RUTEO 
+if (formularioLogin) {
+    formularioLogin.addEventListener('submit', (evento) => {
+        evento.preventDefault(); 
         
-        if (usuarioActual.rol === 'admin') {
-            nombreAdminSpan.textContent = usuarioActual.nombre;
-            vistaAdmin.classList.add('activa'); 
-        } else {
-            nombreUsuarioSpan.textContent = usuarioActual.nombre;
-            vistaPanel.classList.add('activa'); 
-            iniciarReloj();
-            renderizarCalendarioEmpleado();
-        }
-    } else {
-        errorTexto.textContent = 'Credenciales incorrectas o usuario no existe.';
-    }
-});
+        const correoIngresado = document.getElementById('correo').value.trim();
+        const passIngresada = document.getElementById('contrasena').value.trim();
 
+        if (!correoIngresado || !passIngresada) {
+            errorTexto.textContent = 'Por favor, complete todos los campos.';
+            return; 
+        }
+
+        const usuarioEncontrado = usuariosBD.find(u => u.correo === correoIngresado && u.contrasena === passIngresada);
+
+        if (usuarioEncontrado) {
+            usuarioActual = usuarioEncontrado;
+            errorTexto.textContent = '';
+            formularioLogin.reset();
+            vistaLogin.classList.remove('activa');
+            
+            if (usuarioActual.rol === 'admin') {
+                nombreAdminSpan.textContent = usuarioActual.nombre;
+                
+                const menuAdmin = document.getElementById('menu-admin-principal');
+                if (menuAdmin) menuAdmin.style.display = 'grid'; 
+                
+                ['modulo-reportes', 'modulo-crear', 'modulo-gestionar'].forEach(modId => {
+                    const mod = document.getElementById(modId);
+                    if (mod) mod.style.display = 'none';
+                });
+
+                vistaAdmin.classList.add('activa'); 
+            } else {
+                nombreUsuarioSpan.textContent = usuarioActual.nombre;
+                vistaPanel.classList.add('activa'); 
+                iniciarReloj();
+
+                localStorage.setItem('usuarioLogueadoId', usuarioActual.id);
+                
+                setTimeout(() => {
+                    if (typeof generarQrEmpleado === 'function') generarQrEmpleado();
+                    if (typeof renderizarCalendarioEmpleado === 'function') renderizarCalendarioEmpleado();
+                }, 100);
+            }
+        } else {
+            errorTexto.textContent = 'Credenciales incorrectas o usuario no existe.';
+        }
+    });
+}
 
 // UTILIDADES 
 function iniciarReloj() {
-    relojTexto.textContent = new Date().toLocaleTimeString('es-CL');
-    intervaloReloj = setInterval(() => {
+    if (relojTexto) {
         relojTexto.textContent = new Date().toLocaleTimeString('es-CL');
-    }, 1000);
+        intervaloReloj = setInterval(() => {
+            relojTexto.textContent = new Date().toLocaleTimeString('es-CL');
+        }, 1000);
+    }
 }
 
-document.getElementById('btn-cerrar-sesion').addEventListener('click', () => {
-    usuarioActual = null;
-    // Eliminamos la línea textoEstado.textContent = ''; porque ya no existe ese elemento
-    clearInterval(intervaloReloj);
-    
-    // Ocultar el formulario del calendario por si quedó abierto
-    const formCalendario = document.getElementById('contenedor-formulario-fecha');
-    if (formCalendario) formCalendario.style.display = 'none';
+const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
+if (btnCerrarSesion) {
+    btnCerrarSesion.addEventListener('click', () => {
+        usuarioActual = null;
+        localStorage.removeItem('usuarioLogueadoId'); 
+        clearInterval(intervaloReloj);
+        
+        if (typeof intervaloQR !== 'undefined' && intervaloQR) clearInterval(intervaloQR);
+        if (typeof intervaloContador !== 'undefined' && intervaloContador) clearInterval(intervaloContador);
+        
+        const seccionCalendario = document.getElementById('seccion-calendario');
+        if (seccionCalendario) seccionCalendario.style.display = 'none';
+        
+        const btnToggleCalendario = document.getElementById('btn-toggle-calendario');
+        if (btnToggleCalendario) btnToggleCalendario.textContent = 'Ver mi Calendario de Asistencia';
 
-    vistaPanel.classList.remove('activa');
-    vistaLogin.classList.add('activa');
-});
-
-document.getElementById('btn-cerrar-sesion-admin').addEventListener('click', () => {
-    usuarioActual = null;
-    document.getElementById('contenedor-reporte').innerHTML = ''; 
-    vistaAdmin.classList.remove('activa');
-    vistaLogin.classList.add('activa');
-});
-
-//LÓGICA DEL ADMINISTRADOR (Reporte Integral)
-document.getElementById('btn-generar-reporte').addEventListener('click', () => {
-    const contenedor = document.getElementById('contenedor-reporte');
-    
-    if (registrosAsistencia.length === 0) {
-        contenedor.innerHTML = '<p class="texto-estado" style="text-align: left;">No hay registros procesables hoy.</p>';
-        return; 
-    }
-
-    let htmlTabla = `
-        <table>
-            <thead>
-                <tr>
-                    <th>Empleado</th>
-                    <th>Tipo</th>
-                    <th>Hora</th>
-                    <th>Estado</th>
-                    <th>Diferencia</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-
-    registrosAsistencia.forEach(registro => {
-        const empleado = usuariosBD.find(u => u.id === registro.usuario_id);
-        if (!empleado || !empleado.hora_entrada || !empleado.hora_salida) return; 
-
-        const horaReal = registro.timestamp.getHours();
-        const minReal = registro.timestamp.getMinutes();
-        const minutosReales = (horaReal * 60) + minReal;
-
-        let estadoTexto = 'A TIEMPO';
-        let claseEstado = 'atraso-no';
-        let minutosDiferencia = 0;
-
-        if (registro.tipo_accion === 'ENTRADA') {
-            const [horaEsp, minEsp] = empleado.hora_entrada.split(':').map(Number);
-            const minutosEsperados = (horaEsp * 60) + minEsp;
-            const diferencia = minutosReales - minutosEsperados;
-            
-            if (diferencia > 0) {
-                minutosDiferencia = diferencia;
-                estadoTexto = 'ATRASADO';
-                claseEstado = 'atraso-si';
-            }
-        } else if (registro.tipo_accion === 'SALIDA') {
-            const [horaEsp, minEsp] = empleado.hora_salida.split(':').map(Number);
-            const minutosEsperados = (horaEsp * 60) + minEsp;
-            const diferencia = minutosEsperados - minutosReales;
-            
-            if (diferencia > 0) {
-                minutosDiferencia = diferencia;
-                estadoTexto = 'SALIDA ANTICIPADA';
-                claseEstado = 'atraso-si';
-            }
-        }
-
-        const horaFormateada = registro.timestamp.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
-        const textoDiferencia = minutosDiferencia > 0 ? `${minutosDiferencia} min` : '-';
-
-        htmlTabla += `
-            <tr>
-                <td>${empleado.nombre}</td>
-                <td>${registro.tipo_accion}</td>
-                <td>${horaFormateada}</td>
-                <td class="${claseEstado}">${estadoTexto}</td>
-                <td>${textoDiferencia}</td>
-            </tr>
-        `;
+        vistaPanel.classList.remove('activa');
+        vistaLogin.classList.add('activa');
     });
+}
 
-    htmlTabla += `</tbody></table>`;
-    contenedor.innerHTML = htmlTabla;
+const btnCerrarSesionAdmin = document.getElementById('btn-cerrar-sesion-admin');
+if (btnCerrarSesionAdmin) {
+    btnCerrarSesionAdmin.addEventListener('click', () => {
+        usuarioActual = null;
+        const contenedorReporte = document.getElementById('contenedor-reporte');
+        if (contenedorReporte) contenedorReporte.innerHTML = ''; 
+        vistaAdmin.classList.remove('activa');
+        vistaLogin.classList.add('activa');
+    });
+}
+
+// AUTO-LOGIN AL ABRIR LA APP EN EL CELULAR
+window.addEventListener('DOMContentLoaded', () => {
+    const idGuardado = localStorage.getItem('usuarioLogueadoId');
+    if (idGuardado && vistaLogin) {
+        const usuarioEncontrado = usuariosBD.find(u => u.id === parseInt(idGuardado));
+        if (usuarioEncontrado && usuarioEncontrado.rol === 'empleado') {
+            usuarioActual = usuarioEncontrado;
+            vistaLogin.classList.remove('activa');
+            
+            document.getElementById('nombre-usuario').textContent = usuarioActual.nombre;
+            document.getElementById('vista-panel').classList.add('activa'); 
+            iniciarReloj();
+            
+            setTimeout(() => {
+                if (typeof generarQrEmpleado === 'function') generarQrEmpleado();
+                if (typeof renderizarCalendarioEmpleado === 'function') renderizarCalendarioEmpleado();
+            }, 100);
+        }
+    }
 });
