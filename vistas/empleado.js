@@ -1,186 +1,279 @@
-let fechaSeleccionada = null; 
+let fechaSeleccionada = null;
+const fechaActualCalendario = new Date();
+let mesCalendario = fechaActualCalendario.getMonth();
+let anioCalendario = fechaActualCalendario.getFullYear();
+
+function fechaLocalTexto(fecha) {
+    const año = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    return `${año}-${mes}-${dia}`;
+}
+
+function archivoADataURL(archivo) {
+    return new Promise((resolve, reject) => {
+        const lector = new FileReader();
+        lector.onload = () => resolve(lector.result);
+        lector.onerror = () => reject(new Error('No fue posible leer el archivo.'));
+        lector.readAsDataURL(archivo);
+    });
+}
+
+function validarTamanoDocumento(archivo, mensaje) {
+    const maximo = 3 * 1024 * 1024;
+    if (archivo.size > maximo) {
+        mensaje.textContent = 'Para esta prueba local el archivo no puede superar 3 MB.';
+        mensaje.style.color = '#dc3545';
+        return false;
+    }
+    return true;
+}
 
 function renderizarCalendarioEmpleado() {
-    const contenedorCalendario = document.getElementById('calendario-empleado');
-    if (!contenedorCalendario) return;
+    const contenedor = document.getElementById('calendario-empleado');
+    if (!contenedor || !usuarioActual) return;
+    contenedor.innerHTML = '';
 
-    contenedorCalendario.innerHTML = '';
+    const nombresMeses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    document.getElementById('titulo-mes-calendario').textContent = `${nombresMeses[mesCalendario]} ${anioCalendario}`;
 
-    const hoy = new Date();
-    const año = hoy.getFullYear();
-    const mes = hoy.getMonth(); 
-
-    const diasSemana = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
-    diasSemana.forEach(d => {
-        const headerDia = document.createElement('div');
-        headerDia.textContent = d;
-        headerDia.style.fontWeight = 'bold';
-        headerDia.style.fontSize = '0.75rem';
-        headerDia.style.color = '#555';
-        contenedorCalendario.appendChild(headerDia);
+    ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'].forEach(nombre => {
+        const cabecera = document.createElement('div');
+        cabecera.textContent = nombre;
+        cabecera.style.fontWeight = 'bold';
+        cabecera.style.fontSize = '0.75rem';
+        cabecera.style.color = '#555';
+        contenedor.appendChild(cabecera);
     });
 
-    const totalDiasMes = new Date(año, mes + 1, 0).getDate();
+    const primerDia = new Date(anioCalendario, mesCalendario, 1);
+    const desplazamiento = (primerDia.getDay() + 6) % 7;
+    for (let i = 0; i < desplazamiento; i++) {
+        contenedor.appendChild(document.createElement('div'));
+    }
 
-    for (let dia = 1; dia <= totalDiasMes; dia++) {
+    const totalDias = new Date(anioCalendario, mesCalendario + 1, 0).getDate();
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    for (let dia = 1; dia <= totalDias; dia++) {
+        const fecha = new Date(anioCalendario, mesCalendario, dia);
+        const fechaStr = fechaLocalTexto(fecha);
+        const diaSemana = fecha.getDay();
+        const esFinDeSemana = diaSemana === 0 || diaSemana === 6;
+
         const celda = document.createElement('div');
         celda.textContent = dia;
         celda.style.padding = '10px 0';
         celda.style.fontSize = '0.85rem';
-        celda.style.cursor = 'pointer';
+        celda.style.textAlign = 'center';
         celda.style.border = '1px solid #e0e0e0';
-        celda.style.transition = 'transform 0.1s ease-in-out, background-color 0.2s';
+        celda.style.transition = 'transform .1s ease, background-color .2s';
 
-        const fechaStr = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-        
-        const asistenciaDia = registrosAsistencia.find(reg => {
-            const regFecha = reg.timestamp.toISOString().split('T')[0];
-            return reg.usuario_id === usuarioActual.id && regFecha === fechaStr && reg.tipo_accion === 'ENTRADA';
+        const licencia = licenciasAprobadasBD.find(item =>
+            item.usuario_id === usuarioActual.id && item.fecha === fechaStr
+        );
+        const asistencia = registrosAsistencia.find(registro => {
+            const fechaRegistro = fechaLocalTexto(registro.timestamp);
+            return registro.usuario_id === usuarioActual.id &&
+                fechaRegistro === fechaStr && registro.tipo_accion === 'ENTRADA';
         });
 
-        const esDiaPasado = new Date(fechaStr) <= new Date();
-
-        if (asistenciaDia) {
+        if (licencia) {
+            celda.style.backgroundColor = '#cfe2ff';
+            celda.style.color = '#084298';
+            celda.style.fontWeight = 'bold';
+            celda.title = `Licencia aprobada (Solicitud N.º ${licencia.solicitud_id})`;
+        } else if (asistencia) {
             celda.style.backgroundColor = '#d1e7dd';
             celda.style.color = '#0f5132';
             celda.title = 'Asistencia registrada';
-            celda.addEventListener('click', () => ocultarFormulario());
-            
-        } else if (esDiaPasado && dia < hoy.getDate()) {
+        } else if (esFinDeSemana) {
+            celda.style.backgroundColor = '#eeeeee';
+            celda.style.color = '#999';
+            celda.title = 'Fin de semana';
+        } else if (fecha < hoy) {
             celda.style.backgroundColor = '#f8d7da';
             celda.style.color = '#842029';
+            celda.style.cursor = 'pointer';
             celda.title = 'Inasistencia - Clic para justificar';
-
-            celda.addEventListener('click', () => {
-                celda.style.transform = 'scale(0.90)';
-                setTimeout(() => celda.style.transform = 'scale(1)', 100);
-
-                const form = document.getElementById('contenedor-formulario-fecha');
-                
-                if (fechaSeleccionada === fechaStr) {
-                    ocultarFormulario();
-                } else {
-                    fechaSeleccionada = fechaStr;
-                    form.style.display = 'block';
-                    
-                    form.style.opacity = '0';
-                    form.style.transition = 'opacity 0.3s ease';
-                    setTimeout(() => form.style.opacity = '1', 10);
-                    
-                    document.getElementById('titulo-fecha-seleccionada').textContent = `Justificar inasistencia del dia: ${fechaStr}`;
-                    document.getElementById('fecha-objetivo').value = fechaStr;
-                }
-            });
+            celda.addEventListener('click', () => abrirFormularioJustificacion(fechaStr, celda));
         } else {
             celda.style.backgroundColor = '#f8f9fa';
             celda.style.color = '#6c757d';
-            celda.addEventListener('click', () => ocultarFormulario());
+            celda.title = 'Sin información';
         }
-
-        contenedorCalendario.appendChild(celda);
+        contenedor.appendChild(celda);
     }
+}
+
+function abrirFormularioJustificacion(fechaStr, celda) {
+    celda.style.transform = 'scale(.9)';
+    setTimeout(() => celda.style.transform = 'scale(1)', 100);
+    const formulario = document.getElementById('contenedor-formulario-fecha');
+
+    if (fechaSeleccionada === fechaStr && formulario.style.display === 'block') {
+        ocultarFormulario();
+        return;
+    }
+    fechaSeleccionada = fechaStr;
+    formulario.style.display = 'block';
+    formulario.style.opacity = '1';
+    document.getElementById('titulo-fecha-seleccionada').textContent = `Justificar inasistencia del día: ${fechaStr}`;
+    document.getElementById('fecha-objetivo').value = fechaStr;
+    document.getElementById('fecha-hasta-solicitud').value = fechaStr;
+    document.getElementById('solicitud-empleado-auto').textContent = usuarioActual.nombre_completo;
+    document.getElementById('solicitud-correo-auto').textContent = usuarioActual.correo;
 }
 
 function ocultarFormulario() {
-    const form = document.getElementById('contenedor-formulario-fecha');
-    if (form && form.style.display === 'block') {
-        form.style.opacity = '0';
-        setTimeout(() => {
-            form.style.display = 'none';
-            fechaSeleccionada = null;
-        }, 300);
+    const formulario = document.getElementById('contenedor-formulario-fecha');
+    formulario.style.display = 'none';
+    fechaSeleccionada = null;
+}
+
+document.getElementById('btn-mes-anterior').addEventListener('click', () => {
+    mesCalendario--;
+    if (mesCalendario < 0) { mesCalendario = 11; anioCalendario--; }
+    renderizarCalendarioEmpleado();
+});
+
+document.getElementById('btn-mes-siguiente').addEventListener('click', () => {
+    mesCalendario++;
+    if (mesCalendario > 11) { mesCalendario = 0; anioCalendario++; }
+    renderizarCalendarioEmpleado();
+});
+
+document.getElementById('btn-mostrar-licencia').addEventListener('click', () => {
+    const contenedor = document.getElementById('contenedor-formulario-licencia');
+    contenedor.style.display = contenedor.style.display === 'none' ? 'block' : 'none';
+    document.getElementById('licencia-empleado-auto').textContent = usuarioActual.nombre_completo;
+    document.getElementById('licencia-correo-auto').textContent = usuarioActual.correo;
+    const hoyTexto = fechaLocalTexto(new Date());
+    document.getElementById('licencia-fecha-desde').value ||= hoyTexto;
+    document.getElementById('licencia-fecha-hasta').value ||= hoyTexto;
+});
+
+document.getElementById('btn-cancelar-licencia').addEventListener('click', () => {
+    document.getElementById('formulario-licencia-medica').reset();
+    document.getElementById('contenedor-formulario-licencia').style.display = 'none';
+    document.getElementById('mensaje-licencia').textContent = '';
+});
+
+document.getElementById('formulario-licencia-medica').addEventListener('submit', async evento => {
+    evento.preventDefault();
+    const desde = document.getElementById('licencia-fecha-desde').value;
+    const hasta = document.getElementById('licencia-fecha-hasta').value;
+    const motivo = document.getElementById('licencia-motivo').value.trim();
+    const archivo = document.getElementById('licencia-archivo').files[0];
+    const mensaje = document.getElementById('mensaje-licencia');
+
+    if (hasta < desde) {
+        mensaje.textContent = 'La fecha final no puede ser anterior a la fecha inicial.';
+        mensaje.style.color = '#dc3545';
+        return;
     }
-}
+    if (!validarTamanoDocumento(archivo, mensaje)) return;
 
-const formularioJustificacionCalendario = document.getElementById('formulario-justificacion-calendario');
-if (formularioJustificacionCalendario) {
-    formularioJustificacionCalendario.addEventListener('submit', (evento) => {
-        evento.preventDefault();
-        
-        const archivoInput = document.getElementById('archivo-licencia-calendario');
-        const fechaObjetivo = document.getElementById('fecha-objetivo').value;
-        const mensajeValidacion = document.getElementById('mensaje-validacion-calendario');
-        
-        if (archivoInput.files.length === 0) return;
-
-        mensajeValidacion.textContent = "Analizando documento con motor OCR...";
-        mensajeValidacion.style.color = "#666";
-
-        setTimeout(() => {
-            const folioExtraido = "FOL-" + Math.floor(Math.random() * 90000 + 10000);
-            
-            mensajeValidacion.textContent = `Documento validado para el ${fechaObjetivo} (Folio: ${folioExtraido}). Enviado a RRHH.`;
-            mensajeValidacion.style.color = "#198754"; 
-
-            setTimeout(() => {
-                formularioJustificacionCalendario.reset();
-                ocultarFormulario(); 
-                mensajeValidacion.textContent = "";
-            }, 4000);
-
-        }, 2000); 
-    });
-}
-
-const btnToggleCalendario = document.getElementById('btn-toggle-calendario');
-const seccionCalendario = document.getElementById('seccion-calendario');
-
-if (btnToggleCalendario && seccionCalendario) {
-    btnToggleCalendario.addEventListener('click', () => {
-        if (seccionCalendario.style.display === 'none') {
-            seccionCalendario.style.display = 'block';
-            btnToggleCalendario.textContent = 'Ocultar Calendario';
-        } else {
-            seccionCalendario.style.display = 'none';
-            btnToggleCalendario.textContent = 'Ver mi Calendario de Asistencia';
-        }
-    });
-}
-
-// FUNCION: GENERAR QR DINAMICO CON CONTADOR VISUAL
-let intervaloQR = null;
-let intervaloContador = null;
-
-window.generarQrEmpleado = function() {
-    if (!usuarioActual) return;
-    const canvas = document.getElementById('qr-empleado');
-    const textoContador = document.getElementById('qr-contador');
-    
-    if (canvas) {
-        let tiempoRestante = 30; // El QR caduca cada 30 segundos
-
-        function actualizarQR() {
-            const tiempoActual = Date.now();
-            const bloqueTiempo = Math.floor(tiempoActual / 30000); 
-            const tokenSeguridad = `${usuarioActual.id}-${bloqueTiempo}`;
-
-            new QRious({
-                element: canvas,
-                value: tokenSeguridad,
-                size: 200,
-                background: 'white',
-                foreground: 'black',
-                level: 'H' 
-            });
-            
-            tiempoRestante = 30; // Resetea el reloj al redibujar
-        }
-
-        function actualizarContador() {
-            tiempoRestante--;
-            if (tiempoRestante <= 0) {
-                actualizarQR();
-            }
-            if (textoContador) {
-                textoContador.textContent = `Actualizacion automatica en: ${tiempoRestante} segundos`;
-            }
-        }
-
-        actualizarQR(); 
-        
-        if (intervaloQR) clearInterval(intervaloQR);
-        if (intervaloContador) clearInterval(intervaloContador);
-        
-        intervaloContador = setInterval(actualizarContador, 1000);
+    let archivoDatos;
+    try {
+        archivoDatos = await archivoADataURL(archivo);
+    } catch (error) {
+        mensaje.textContent = error.message;
+        mensaje.style.color = '#dc3545';
+        return;
     }
-};
+
+    const nuevoId = solicitudesBD.length ? Math.max(...solicitudesBD.map(item => item.id)) + 1 : 1;
+    solicitudesBD.push({
+        id: nuevoId,
+        usuario_id: usuarioActual.id,
+        tipo_solicitud: 'LICENCIA',
+        fecha_desde: desde,
+        fecha_hasta: hasta,
+        motivo,
+        nombre_archivo: archivo.name,
+        archivo_url: null,
+        archivo_datos: archivoDatos,
+        archivo_tipo: archivo.type,
+        estado: 'PENDIENTE',
+        fecha_envio: new Date().toISOString(),
+        revisado_por: null,
+        comentario_revision: null,
+        fecha_revision: null,
+        hora_corregida: null
+    });
+    guardarSolicitudesLocales();
+    mensaje.textContent = `Licencia N.º ${nuevoId} enviada a RR. HH. para revisión.`;
+    mensaje.style.color = '#198754';
+    evento.target.reset();
+    setTimeout(() => {
+        document.getElementById('contenedor-formulario-licencia').style.display = 'none';
+        mensaje.textContent = '';
+    }, 3000);
+});
+
+const formularioJustificacion = document.getElementById('formulario-justificacion-calendario');
+formularioJustificacion.addEventListener('submit', async evento => {
+    evento.preventDefault();
+    const archivoInput = document.getElementById('archivo-licencia-calendario');
+    const fechaDesde = document.getElementById('fecha-objetivo').value;
+    const fechaHasta = document.getElementById('fecha-hasta-solicitud').value;
+    const tipo = document.getElementById('tipo-solicitud-empleado').value;
+    const motivo = document.getElementById('motivo-falta').value.trim();
+    const mensaje = document.getElementById('mensaje-validacion-calendario');
+
+    if (fechaHasta < fechaDesde) {
+        mensaje.textContent = 'La fecha final no puede ser anterior a la inicial.';
+        mensaje.style.color = '#dc3545';
+        return;
+    }
+    if (tipo === 'CERTIFICADO' && archivoInput.files.length === 0) {
+        mensaje.textContent = 'Debes adjuntar el certificado.';
+        mensaje.style.color = '#dc3545';
+        return;
+    }
+
+    const archivo = archivoInput.files[0] || null;
+    if (archivo && !validarTamanoDocumento(archivo, mensaje)) return;
+
+    let archivoDatos = null;
+    if (archivo) {
+        try {
+            archivoDatos = await archivoADataURL(archivo);
+        } catch (error) {
+            mensaje.textContent = error.message;
+            mensaje.style.color = '#dc3545';
+            return;
+        }
+    }
+
+    const nuevoId = solicitudesBD.length ? Math.max(...solicitudesBD.map(item => item.id)) + 1 : 1;
+    solicitudesBD.push({
+        id: nuevoId,
+        usuario_id: usuarioActual.id,
+        tipo_solicitud: tipo,
+        fecha_desde: fechaDesde,
+        fecha_hasta: fechaHasta,
+        motivo,
+        nombre_archivo: archivo ? archivo.name : null,
+        archivo_url: null,
+        archivo_datos: archivoDatos,
+        archivo_tipo: archivo ? archivo.type : null,
+        estado: 'PENDIENTE',
+        fecha_envio: new Date().toISOString(),
+        revisado_por: null,
+        comentario_revision: null,
+        fecha_revision: null,
+        hora_corregida: null
+    });
+    guardarSolicitudesLocales();
+    mensaje.textContent = `Solicitud N.º ${nuevoId} enviada a RR. HH.`;
+    mensaje.style.color = '#198754';
+    setTimeout(() => {
+        formularioJustificacion.reset();
+        ocultarFormulario();
+        mensaje.textContent = '';
+    }, 3000);
+});
