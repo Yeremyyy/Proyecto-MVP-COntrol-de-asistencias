@@ -4,29 +4,42 @@
 
 // 1. CLASE PADRE (Superclase)
 class Usuario {
-    constructor(id, correo, contrasena, nombre, rol) {
+    constructor(id, nombre, apellidoPaterno, apellidoMaterno, rut, telefono, direccion, correo, contrasena, horaEntrada, horaSalida, rol) {
         this.id = id;
+        this.nombre = nombre;
+        this.apellido_paterno = apellidoPaterno;
+        this.apellido_materno = apellidoMaterno;
+        this.rut = rut;
+        this.telefono = telefono;
+        this.direccion = direccion;
         this.correo = correo;
         this.contrasena = contrasena;
-        this.nombre = nombre;
+        this.hora_entrada = horaEntrada;
+        this.hora_salida = horaSalida;
         this.rol = rol;
+    }
+
+    get nombre_completo() {
+        return [this.nombre, this.apellido_paterno, this.apellido_materno].filter(Boolean).join(' ');
     }
 }
 
 // 2. CLASES HIJAS (Herencia)
 class Empleado extends Usuario {
-    constructor(id, correo, contrasena, nombre, horaEntrada, horaSalida) {
-        // La función super() llama al constructor del padre (Usuario)
-        super(id, correo, contrasena, nombre, 'empleado'); 
-        this.hora_entrada = horaEntrada;
-        this.hora_salida = horaSalida;
+    constructor(id, nombre, apellidoPaterno, apellidoMaterno, rut, telefono, direccion, correo, contrasena, horaEntrada, horaSalida) {
+        super(id, nombre, apellidoPaterno, apellidoMaterno, rut, telefono, direccion, correo, contrasena, horaEntrada, horaSalida, 'empleado');
     }
 }
 
 class Administrador extends Usuario {
-    constructor(id, correo, contrasena, nombre) {
-        super(id, correo, contrasena, nombre, 'admin');
-        // El admin no tiene horarios fijos en esta etapa
+    constructor(id, nombre, apellidoPaterno, apellidoMaterno, rut, telefono, direccion, correo, contrasena, horaEntrada, horaSalida) {
+        super(id, nombre, apellidoPaterno, apellidoMaterno, rut, telefono, direccion, correo, contrasena, horaEntrada, horaSalida, 'admin');
+    }
+}
+
+class RecursosHumanos extends Usuario {
+    constructor(id, nombre, apellidoPaterno, apellidoMaterno, rut, telefono, direccion, correo, contrasena, horaEntrada, horaSalida) {
+        super(id, nombre, apellidoPaterno, apellidoMaterno, rut, telefono, direccion, correo, contrasena, horaEntrada, horaSalida, 'rrhh');
     }
 }
 

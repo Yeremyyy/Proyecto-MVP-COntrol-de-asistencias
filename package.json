@@ -1,11 +1,11 @@
 {
-  "name": "mvp-asistencia",
-  "version": "1.0.0",
-  "description": "Sistema de Control de Asistencia MVP",
+  "name": "sistema-asistencia-supabase-qr",
+  "version": "2.0.0",
+  "description": "Sistema integrado de asistencia, RRHH, auditoría y QR con Supabase",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "check": "node --check main.js && node --check src/db.js && node --check vistas/app-supabase.js && node --check vistas/kiosco-supabase.js"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,11 @@
     "url": "https://github.com/Yeremyyy/Proyecto-MVP-COntrol-de-asistencias/issues"
   },
   "homepage": "https://github.com/Yeremyyy/Proyecto-MVP-COntrol-de-asistencias#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "html5-qrcode": "^2.3.8",
+    "qrcode": "^1.5.4"
+  },
   "devDependencies": {
     "electron": "^43.4.1"
   }

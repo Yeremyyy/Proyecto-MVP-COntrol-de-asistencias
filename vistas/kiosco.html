@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terminal QR - Kiosco</title>
     <link rel="stylesheet" href="./style.css">
-    
-    <!-- Librería externa para leer QR -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
     <div class="contenedor activa">
@@ -16,21 +13,20 @@
             <p style="font-size: 0.8rem; color: #666; margin-bottom: 20px; text-transform: uppercase;">Acerque su código QR a la cámara</p>
             
             <div id="lector-qr" style="width: 100%; max-width: 400px; margin: 0 auto; border: 2px solid #000; min-height: 300px; background: #000;"></div>
+
+            <div id="controles-camara" style="display:none; margin:15px auto; max-width:400px;">
+                <select id="selector-camara" style="width:100%; padding:10px; margin-bottom:10px;"></select>
+                <button id="btn-reintentar-camara" type="button" class="btn-primario">Iniciar cámara</button>
+            </div>
             
             <p id="mensaje-kiosco" class="texto-estado" style="font-size: 1.1rem; font-weight: bold; margin-top: 20px; min-height: 30px;"></p>
             
             <!-- Botón para regresar al login original -->
-            <a href="index.html" style="text-decoration: none;">
-                <button id="btn-volver" class="btn-texto">Volver al Login</button>
-            </a>
+            <button id="btn-volver" class="btn-texto">Volver al Login</button>
         </div>
     </div>
 
-    <!-- Scripts de la base de datos para que el escáner sepa a quién lee -->
-    <script src="../src/clases.js"></script>
-    <script src="./app.js"></script>
-    
     <!-- Script exclusivo para el kiosco -->
-    <script src="./kiosco.js"></script>
+    <script src="./kiosco-supabase.js"></script>
 </body>
 </html>
