@@ -1,6 +1,5 @@
-const { rpc, configurado } = require('../src/db');
-const QRCode = require('qrcode');
-const { ipcRenderer } = require('electron');
+import { rpc, configurado } from '../src/db.js';
+import QRCode from 'qrcode';
 
 let usuarioActual = null;
 let tokenSesion = sessionStorage.getItem('tokenSesion');
@@ -83,7 +82,7 @@ async function entrarPanel(usuario) {
 $('formulario-login').addEventListener('submit', async evento => {
     evento.preventDefault();
     const mensaje = $('mensaje-error');
-    mensaje.textContent = configurado ? 'Conectando...' : 'Debes configurar Supabase en src/config.js';
+    mensaje.textContent = configurado ? 'Conectando...' : 'Debes configurar las variables de Supabase';
     if (!configurado) return;
     try {
         const resultado = await rpc('autenticar_usuario', {
@@ -163,7 +162,7 @@ function prepararDatosAutomaticos() {
     $('solicitud-correo-auto').textContent = usuarioActual.correo;
 }
 
-async function renderizarCalendarioPara({ mesReferencia, contenedorId, tituloId, usuarioId = null, permitirJustificacion = false }) {
+async function renderizarCalendarioPara({ mesReferencia, contenedorId, tituloId, usuarioId = null, permitirJustificacion = false, formularioComun = false }) {
     const ano = mesReferencia.getFullYear();
     const mes = mesReferencia.getMonth();
     const desde = `${ano}-${String(mes + 1).padStart(2, '0')}-01`;
@@ -201,7 +200,10 @@ async function renderizarCalendarioPara({ mesReferencia, contenedorId, tituloId,
         const celda = document.createElement('button');
         celda.type = 'button'; celda.textContent = dia; celda.title = titulo;
         celda.style.cssText = `padding:9px 3px;border:0;border-radius:4px;color:${fondo === '#e9ecef' ? '#333' : '#fff'};background:${fondo};cursor:pointer`;
-        if (fondo === '#dc3545' && permitirJustificacion) celda.addEventListener('click', () => abrirJustificacion(fecha));
+        if (fondo === '#dc3545' && permitirJustificacion) {
+            celda.classList.add('dia-justificable');
+            celda.addEventListener('click', () => formularioComun ? abrirJustificacionComun(fecha) : abrirJustificacion(fecha));
+        }
         contenedor.appendChild(celda);
     }
 }
@@ -220,7 +222,9 @@ async function renderizarCalendarioRrhh() {
         mesReferencia: mesCalendarioRrhh,
         contenedorId: 'calendario-rrhh',
         tituloId: 'titulo-mes-calendario-rrhh',
-        usuarioId: usuarioActual.id
+        usuarioId: usuarioActual.id,
+        permitirJustificacion: true,
+        formularioComun: true
     });
 }
 
@@ -229,7 +233,9 @@ async function renderizarCalendarioAdmin() {
         mesReferencia: mesCalendarioAdmin,
         contenedorId: 'calendario-admin',
         tituloId: 'titulo-mes-calendario-admin',
-        usuarioId: usuarioActual.id
+        usuarioId: usuarioActual.id,
+        permitirJustificacion: true,
+        formularioComun: true
     });
 }
 
@@ -251,6 +257,25 @@ function abrirJustificacion(fecha) {
     $('fecha-objetivo').value = fecha;
     $('fecha-hasta-solicitud').value = fecha;
 }
+
+function abrirJustificacionComun(fecha) {
+    $('justificacion-comun-empleado').textContent = nombreCompleto(usuarioActual);
+    $('justificacion-comun-correo').textContent = usuarioActual.correo;
+    $('justificacion-comun-fecha').value = fecha;
+    $('justificacion-comun-hasta').value = fecha;
+    $('titulo-justificacion-comun').textContent = `Justificar inasistencia del día: ${fecha}`;
+    $('mensaje-justificacion-comun').textContent = '';
+    $('modal-justificacion-comun').style.display = 'flex';
+}
+
+function cerrarJustificacionComun() {
+    $('modal-justificacion-comun').style.display = 'none';
+}
+
+$('btn-cancelar-justificacion-comun')?.addEventListener('click', cerrarJustificacionComun);
+$('modal-justificacion-comun')?.addEventListener('click', evento => {
+    if (evento.target === $('modal-justificacion-comun')) cerrarJustificacionComun();
+});
 
 $('btn-mostrar-licencia')?.addEventListener('click', () => $('contenedor-formulario-licencia').style.display = 'block');
 $('btn-cancelar-licencia')?.addEventListener('click', () => $('contenedor-formulario-licencia').style.display = 'none');
@@ -294,6 +319,23 @@ $('formulario-justificacion-calendario')?.addEventListener('submit', async event
     evento.preventDefault();
     const ok = await enviarSolicitud({ tipo: $('tipo-solicitud-empleado').value, desde: $('fecha-objetivo').value, hasta: $('fecha-hasta-solicitud').value, motivo: $('motivo-falta').value, archivo: $('archivo-licencia-calendario').files[0], mensaje: $('mensaje-validacion-calendario') });
     if (ok) { evento.target.reset(); $('contenedor-formulario-fecha').style.display = 'none'; }
+});
+
+$('formulario-justificacion-comun')?.addEventListener('submit', async evento => {
+    evento.preventDefault();
+    const ok = await enviarSolicitud({
+        tipo: $('tipo-justificacion-comun').value,
+        desde: $('justificacion-comun-fecha').value,
+        hasta: $('justificacion-comun-hasta').value,
+        motivo: $('motivo-justificacion-comun').value,
+        archivo: $('archivo-justificacion-comun').files[0],
+        mensaje: $('mensaje-justificacion-comun')
+    });
+    if (ok) {
+        evento.target.reset();
+        $('mensaje-justificacion-comun').textContent = 'Solicitud enviada correctamente a RR. HH. Puedes cerrar esta ventana.';
+        $('mensaje-justificacion-comun').style.color = '#198754';
+    }
 });
 
 // ---------------- ADMINISTRACIÓN ----------------
@@ -391,8 +433,15 @@ window.descargarReporteEmpleado = async id => {
     if (!registros.length) lineas.push(['Sin registros en el período seleccionado']);
     const contenido = lineas.map(fila => fila.map(campoCsv).join(';')).join('\r\n');
     const nombre = `reporte_${usuario.rut.replace(/[^0-9kK]/g,'')}_${rangoReporteActual.desde}_${rangoReporteActual.hasta}.csv`;
-    const resultado = await ipcRenderer.invoke('guardar-reporte-csv', { nombre, contenido });
-    if (!resultado.cancelado && !resultado.ok) alert(resultado.error);
+    const blob = new Blob([`\uFEFF${contenido}`], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = nombre;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
 $('buscar-reporte-empleado')?.addEventListener('input', dibujarReportes);
@@ -546,15 +595,28 @@ window.abrirArchivoSolicitud=async id=>{
         mensaje.style.color='#dc3545';
         return;
     }
-    mensaje.textContent='Abriendo documento...';
-    mensaje.style.color='#666';
     try {
-        const resultado=await ipcRenderer.invoke('abrir-documento-solicitud',{
-            datos:s.archivo_base64,
-            nombre:s.nombre_archivo||'documento.pdf'
-        });
-        mensaje.textContent=resultado.ok?'Documento abierto en el visor predeterminado.':resultado.error;
-        mensaje.style.color=resultado.ok?'#198754':'#dc3545';
+        const coincidencia=String(s.archivo_base64).match(/^data:([^;,]+);base64,([\s\S]+)$/);
+        if(!coincidencia) throw new Error('El documento guardado no tiene un formato válido.');
+        const permitidos=['application/pdf','image/png','image/jpeg','image/webp'];
+        const mime=coincidencia[1].toLowerCase();
+        if(!permitidos.includes(mime)) throw new Error('El tipo de documento no está permitido.');
+        const binario=atob(coincidencia[2]);
+        if(!binario.length) throw new Error('El documento está vacío.');
+        const bytes=new Uint8Array(binario.length);
+        for(let i=0;i<binario.length;i++) bytes[i]=binario.charCodeAt(i);
+        if(bytes.length>4*1024*1024) throw new Error('El documento supera el tamaño permitido.');
+        if(mime==='application/pdf'&&binario.slice(0,4)!=='%PDF') throw new Error('El archivo no corresponde a un PDF válido.');
+        const url=URL.createObjectURL(new Blob([bytes],{type:mime}));
+        const ventana=window.open(url,'_blank');
+        if(!ventana) {
+            URL.revokeObjectURL(url);
+            throw new Error('El navegador bloqueó la ventana. Permite las ventanas emergentes para abrir el documento.');
+        }
+        ventana.opener=null;
+        mensaje.textContent='Documento abierto en una pestaña nueva.';
+        mensaje.style.color='#198754';
+        setTimeout(()=>URL.revokeObjectURL(url),60000);
     } catch(error) {
         mensaje.textContent=textoError(error);
         mensaje.style.color='#dc3545';
@@ -567,7 +629,7 @@ $('btn-rechazar-solicitud')?.addEventListener('click',()=>revisar('RECHAZADA'));
 
 // Si se recargó la ventana, se recupera la sesión local mientras siga vigente en la BD.
 window.addEventListener('DOMContentLoaded', async () => {
-    if (!configurado) $('mensaje-error').textContent='Configura Supabase en src/config.js antes de iniciar.';
+    if (!configurado) $('mensaje-error').textContent='Configura VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY antes de iniciar.';
     const guardado=sessionStorage.getItem('usuarioActual');
     if(tokenSesion&&guardado){try{await entrarPanel(JSON.parse(guardado));}catch(_){sessionStorage.clear();tokenSesion=null;}}
 });

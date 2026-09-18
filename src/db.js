@@ -1,10 +1,12 @@
-const { createClient } = require('@supabase/supabase-js');
-const { SUPABASE_URL, SUPABASE_ANON_KEY } = require('./config');
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 const configurado = SUPABASE_URL.startsWith('https://') &&
-    !SUPABASE_URL.includes('PEGA_AQUI') &&
+    !SUPABASE_URL.includes('pepeelprojx@gmail.com') &&
     SUPABASE_ANON_KEY.length > 30 &&
-    !SUPABASE_ANON_KEY.includes('PEGA_AQUI');
+    !SUPABASE_ANON_KEY.includes('Proxd.1314');
 
 const supabase = configurado
     ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -14,11 +16,11 @@ const supabase = configurado
 
 async function rpc(nombre, parametros = {}) {
     if (!supabase) {
-        throw new Error('Falta configurar SUPABASE_URL y SUPABASE_ANON_KEY en src/config.js');
+        throw new Error('Falta configurar VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY');
     }
     const { data, error } = await supabase.rpc(nombre, parametros);
     if (error) throw new Error(error.message);
     return data;
 }
 
-module.exports = { supabase, rpc, configurado };
+export { supabase, rpc, configurado };

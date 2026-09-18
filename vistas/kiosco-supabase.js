@@ -1,5 +1,5 @@
-const { Html5Qrcode } = require('html5-qrcode');
-const { rpc, configurado } = require('../src/db');
+import { Html5Qrcode } from 'html5-qrcode';
+import { rpc, configurado } from '../src/db.js';
 
 const mensaje = document.getElementById('mensaje-kiosco');
 const btnVolver = document.getElementById('btn-volver');
@@ -30,7 +30,7 @@ function explicarError(error) {
 }
 
 async function buscarCamaras() {
-    mostrar(configurado ? 'Solicitando permiso de cámara...' : 'Primero configura Supabase en src/config.js.', configurado ? '#0056b3' : '#dc3545');
+    mostrar(configurado ? 'Solicitando permiso de cámara...' : 'Primero configura las variables de Supabase.', configurado ? '#0056b3' : '#dc3545');
     try {
         camaras = await Html5Qrcode.getCameras();
         if (!camaras.length) throw new Error('No cameras found');

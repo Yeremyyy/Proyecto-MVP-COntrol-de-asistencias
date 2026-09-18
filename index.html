@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Asistencia</title>
+    <link rel="stylesheet" href="./vistas/style.css">
+</head>
+<body>
+
+    <!-- VISTA 1: LOGIN -->
+    <div id="vista-login" class="contenedor activa">
+        <div class="tarjeta">
+            <h2>Ingreso al Sistema</h2>
+            <form id="formulario-login">
+                <div class="grupo-input">
+                    <label for="correo">Correo Electrónico</label>
+                    <input type="email" id="correo" required>
+                </div>
+                <div class="grupo-input">
+                    <label for="contrasena">Contraseña</label>
+                    <input type="password" id="contrasena" required>
+                </div>
+                <p id="mensaje-error" class="texto-error"></p>
+                <button type="submit" class="btn-primario">Iniciar Sesión</button>
+            </form>
+            <div style="margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+                <p style="font-size: 0.7rem; color: #666; margin-bottom: 10px;">¿Entrada física a la empresa?</p>
+                <button id="btn-abrir-kiosco" type="button" class="btn-accion btn-entrada" style="width: 100%;">Modo Kiosco (Escanear QR)</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- VISTA 2: PANEL DE EMPLEADO -->
+    <div id="vista-panel" class="contenedor">
+        <div class="tarjeta tarjeta-ancha">
+            <h2>Bienvenido, <span id="nombre-usuario"></span></h2>
+            <p class="reloj" id="reloj-actual">00:00:00</p>
+
+            <div class="menu-personal">
+                <button id="btn-empleado-qr" class="boton-modulo-rrhh activo">Mi QR</button>
+                <button id="btn-empleado-calendario" class="boton-modulo-rrhh">Mi calendario</button>
+            </div>
+            <p id="mensaje-solicitud-global" class="mensaje-exito" style="display:none;"></p>
+
+            <div id="modulo-qr-empleado">
+            <div class="tarjeta-qr-empleado">
+                <h3>Mi QR de asistencia</h3>
+                <p class="ayuda-formulario">Presiona el botón y muestra el código en el kiosco. Es válido una sola vez durante 45 segundos.</p>
+                <canvas id="qr-empleado" width="220" height="220"></canvas>
+                <button id="btn-generar-qr-empleado" class="btn-primario" type="button">Generar QR</button>
+                <p id="qr-contador" class="texto-estado"></p>
+            </div>
+            </div>
+
+            <div id="modulo-calendario-empleado" style="display:none;">
+            <button id="btn-mostrar-licencia" class="btn-primario btn-licencia">
+                Informar licencia médica
+            </button>
+
+            <div id="contenedor-formulario-licencia" class="formulario-licencia" style="display:none;">
+                <h3>Enviar licencia médica</h3>
+                <p class="ayuda-formulario">Utiliza este formulario cuando la licencia incluya días actuales o futuros.</p>
+                <form id="formulario-licencia-medica">
+                    <div class="resumen-automatico">
+                        <div><strong>Empleado:</strong> <span id="licencia-empleado-auto"></span></div>
+                        <div><strong>Correo:</strong> <span id="licencia-correo-auto"></span></div>
+                        <div><strong>Estado inicial:</strong> PENDIENTE</div>
+                    </div>
+                    <div class="fila-fechas">
+                        <div class="grupo-input">
+                            <label for="licencia-fecha-desde">Fecha desde</label>
+                            <input type="date" id="licencia-fecha-desde" required>
+                        </div>
+                        <div class="grupo-input">
+                            <label for="licencia-fecha-hasta">Fecha hasta</label>
+                            <input type="date" id="licencia-fecha-hasta" required>
+                        </div>
+                    </div>
+                    <div class="grupo-input">
+                        <label for="licencia-motivo">Motivo</label>
+                        <textarea id="licencia-motivo" rows="3" required placeholder="Ej: Reposo médico indicado por profesional"></textarea>
+                    </div>
+                    <div class="grupo-input">
+                        <label for="licencia-archivo">Documento de licencia</label>
+                        <input type="file" id="licencia-archivo" accept=".pdf,image/*" required>
+                    </div>
+                    <div class="grupo-botones-formulario">
+                        <button type="submit" class="btn-primario">Enviar a RR. HH.</button>
+                        <button type="button" id="btn-cancelar-licencia" class="btn-secundario">Cancelar</button>
+                    </div>
+                    <p id="mensaje-licencia" class="texto-estado"></p>
+                </form>
+            </div>
+            
+            <div style="margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; text-align: left;">
+                <h3 style="font-size: 1rem; margin-bottom: 15px; color: #333;">Mi Calendario de Asistencia</h3>
+                <p style="font-size: 0.75rem; color: #666; margin-bottom: 10px;">Haz clic en un día con inasistencia (rojo) para justificarlo.</p>
+
+                <div class="navegacion-calendario">
+                    <button type="button" id="btn-mes-anterior" class="btn-calendario">‹</button>
+                    <strong id="titulo-mes-calendario"></strong>
+                    <button type="button" id="btn-mes-siguiente" class="btn-calendario">›</button>
+                </div>
+
+                <div class="leyenda-calendario">
+                    <span><i class="leyenda-verde"></i> Asistencia</span>
+                    <span><i class="leyenda-azul"></i> Licencia</span>
+                    <span><i class="leyenda-roja"></i> Inasistencia</span>
+                    <span><i class="leyenda-gris"></i> Sin información</span>
+                </div>
+                
+                <div id="calendario-empleado" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; text-align: center;"></div>
+
+                <div id="contenedor-formulario-fecha" style="background: #f9f9f9; padding: 15px; border: 1px solid #ddd; display: none;">
+                    <h4 id="titulo-fecha-seleccionada" style="font-size: 0.9rem; margin-bottom: 10px; color: #000;">Justificar fecha: </h4>
+                    <form id="formulario-justificacion-calendario">
+                        <input type="hidden" id="fecha-objetivo">
+                        <div class="resumen-automatico">
+                            <div><strong>Empleado:</strong> <span id="solicitud-empleado-auto"></span></div>
+                            <div><strong>Correo:</strong> <span id="solicitud-correo-auto"></span></div>
+                            <div><strong>Envío:</strong> se registrará automáticamente</div>
+                        </div>
+                        <div class="grupo-input">
+                            <label for="tipo-solicitud-empleado">Tipo de solicitud</label>
+                            <select id="tipo-solicitud-empleado" required>
+                                <option value="CERTIFICADO">Certificado</option>
+                                <option value="OLVIDO_ENTRADA">Olvido de entrada</option>
+                                <option value="OLVIDO_SALIDA">Olvido de salida</option>
+                            </select>
+                        </div>
+                        <div class="grupo-input">
+                            <label for="fecha-hasta-solicitud">Fecha hasta</label>
+                            <input type="date" id="fecha-hasta-solicitud" required>
+                        </div>
+                        <div class="grupo-input">
+                            <input type="text" id="motivo-falta" placeholder="Motivo (Ej: Licencia médica, calamidad...)" required>
+                        </div>
+                        <div class="grupo-input">
+                            <label for="archivo-licencia-calendario">Certificado o respaldo (opcional para olvidos de marcación)</label>
+                            <input type="file" id="archivo-licencia-calendario" accept=".pdf, image/*" style="border: none; padding: 0;">
+                        </div>
+                        <button type="submit" class="btn-primario" style="background-color: #0056b3; font-size: 0.8rem; padding: 8px;">Enviar Justificación</button>
+                        <p id="mensaje-validacion-calendario" class="texto-estado" style="font-size: 0.8rem; margin-top: 10px;"></p>
+                    </form>
+                </div>
+            </div>
+            </div>
+
+            <button id="btn-cerrar-sesion" class="btn-texto">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <!-- VISTA 3: PANEL DE ADMINISTRADOR -->
+    <div id="vista-admin" class="contenedor">
+        <div class="tarjeta tarjeta-ancha">
+            <h2>Panel de Administración</h2>
+            <p style="font-size: 0.8rem; color: #666; text-transform: uppercase; margin-bottom: 20px;">
+                Sesión: <span id="nombre-admin" style="font-weight: bold; color: #000;"></span>
+            </p>
+            
+            <!-- LA BOTONERA PRINCIPAL -->
+            <div id="menu-admin-principal" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <button id="btn-menu-reportes" class="btn-texto" style="padding: 15px; font-size: 0.9rem; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #333;">Generar Reportes</button>
+                <button id="btn-menu-crear" class="btn-texto" style="padding: 15px; font-size: 0.9rem; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #333;">Registrar Usuario</button>
+                <button id="btn-menu-gestionar" class="btn-texto" style="padding: 15px; font-size: 0.9rem; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #333;">Actualizar / Eliminar</button>
+                <button id="btn-menu-qr" class="btn-texto" style="padding: 15px; font-size: 0.9rem; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #333;">Ver Auditoría</button>
+                <button id="btn-menu-mi-qr-admin" class="btn-texto" style="padding: 15px; font-size: 0.9rem; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #333;">Mi QR</button>
+                <button id="btn-menu-mi-calendario-admin" class="btn-texto" style="padding: 15px; font-size: 0.9rem; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #333;">Mi Calendario</button>
+            </div>
+
+            <!-- MÓDULO 1: REPORTES -->
+            <div id="modulo-reportes" style="display: none; text-align: left;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                    <h3 style="font-size: 1.1rem; color: #333; margin: 0;">Reportes de asistencia</h3>
+                    <button class="btn-texto btn-volver" style="color: #dc3545; font-weight: bold; text-decoration: underline;">Volver al Menú</button>
+                </div>
+                
+                <div class="filtros-reporte">
+                    <div class="grupo-input">
+                        <label for="buscar-reporte-empleado">Buscar empleado o RUT</label>
+                        <input type="search" id="buscar-reporte-empleado" placeholder="Nombre, apellido, RUT o correo">
+                    </div>
+                    <div class="grupo-input">
+                        <label for="periodo-reporte">Período</label>
+                        <select id="periodo-reporte">
+                            <option value="DIA">Día</option>
+                            <option value="SEMANA">Semana</option>
+                            <option value="MES">Mes</option>
+                        </select>
+                    </div>
+                    <div class="grupo-input">
+                        <label for="fecha-reporte">Fecha de referencia</label>
+                        <input type="date" id="fecha-reporte">
+                    </div>
+                </div>
+                <p id="resumen-periodo-reporte" class="ayuda-formulario"></p>
+                <div id="contenedor-reporte" style="overflow-x: auto;"></div>
+            </div>
+
+            <!-- MÓDULO 2: CREAR USUARIO -->
+            <div id="modulo-crear" style="display: none; text-align: left;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                    <h3 style="font-size: 1.1rem; color: #333; margin: 0;">Registrar Nuevo Usuario</h3>
+                    <button class="btn-texto btn-volver" style="color: #dc3545; font-weight: bold; text-decoration: underline;">Volver al Menú</button>
+                </div>
+                
+                <form id="formulario-crear-usuario">
+                    <!-- Fila 1: Nombres -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <div style="flex: 1;">
+                            <label for="nuevo-nombre">Nombre</label>
+                            <input type="text" id="nuevo-nombre" required style="width: 100%; padding: 10px; border: 1px solid #ccc;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="nuevo-paterno">Apellido Paterno</label>
+                            <input type="text" id="nuevo-paterno" required style="width: 100%; padding: 10px; border: 1px solid #ccc;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="nuevo-materno">Apellido Materno</label>
+                            <input type="text" id="nuevo-materno" required style="width: 100%; padding: 10px; border: 1px solid #ccc;">
+                        </div>
+                    </div>
+
+                    <!-- Fila 2: Identificación y Teléfono con formato chileno -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <div style="flex: 1;">
+                            <label for="nuevo-rut">RUT (Autoformato)</label>
+                            <input type="text" id="nuevo-rut" required placeholder="12.345.678-9" maxlength="12" style="width: 100%; padding: 10px; border: 1px solid #ccc;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="nuevo-telefono">Teléfono Celular</label>
+                            <div style="display: flex; align-items: center; border: 1px solid #ccc; background: #fff;">
+                                <span style="padding: 0 10px; background: #e9ecef; color: #555; font-weight: bold; border-right: 1px solid #ccc; height: 100%; display: flex; align-items: center;">+56 9</span>
+                                <input type="text" id="nuevo-telefono" required placeholder="12345678" maxlength="8" style="width: 100%; padding: 10px; border: none; outline: none;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fila 3: Dirección -->
+                    <div style="margin-bottom: 15px;">
+                        <label for="nueva-direccion">Dirección Completa</label>
+                        <input type="text" id="nueva-direccion" required style="width: 100%; padding: 10px; border: 1px solid #ccc;">
+                    </div>
+                    
+                    <!-- Fila 4: Correo y Pass (Automáticos) -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <div style="flex: 2;">
+                            <label for="nuevo-correo">Correo Corporativo (Autogenerado)</label>
+                            <input type="email" id="nuevo-correo" disabled style="width: 100%; padding: 10px; border: 1px solid #ccc; background-color: #e9ecef; color: #555; font-weight: bold;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="nueva-pass">Contraseña (Autogenerada)</label>
+                            <input type="text" id="nueva-pass" disabled style="width: 100%; padding: 10px; border: 1px solid #ccc; background-color: #e9ecef; color: #555; font-weight: bold;">
+                        </div>
+                    </div>
+
+                    <!-- Fila 5: Rol predeterminado -->
+                    <div style="margin-bottom: 15px;">
+                        <label for="nuevo-rol">Rol del usuario</label>
+                        <select id="nuevo-rol" required style="width: 100%; padding: 10px; border: 1px solid #ccc; background: #fff;">
+                            <option value="empleado">Empleado</option>
+                            <option value="rrhh">Recursos Humanos</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                        <small style="display: block; color: #666; margin-top: 5px;">Solo se pueden asignar los roles predeterminados del sistema.</small>
+                    </div>
+
+                    <!-- Fila 6: Horarios -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                        <div style="flex: 1;">
+                            <label for="nueva-entrada">Hora Entrada asignada</label>
+                            <input type="time" id="nueva-entrada" required value="08:00" style="width: 100%; padding: 10px; border: 1px solid #ccc;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="nueva-salida">Hora Salida asignada</label>
+                            <input type="time" id="nueva-salida" required value="17:00" style="width: 100%; padding: 10px; border: 1px solid #ccc;">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primario" style="background-color: #333;">Guardar Registro</button>
+                    <p id="mensaje-creacion" class="texto-estado" style="font-weight: bold; margin-top: 15px; min-height: 20px;"></p>
+                </form>
+            </div>
+
+            <!-- MÓDULO 3: GESTIONAR -->
+            <div id="modulo-gestionar" style="display: none; text-align: left;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                    <h3 style="font-size: 1.1rem; color: #333; margin: 0;">Directorio de Usuarios</h3>
+                    <button class="btn-texto btn-volver" style="color: #dc3545; font-weight: bold; text-decoration: underline;">Volver al Menú</button>
+                </div>
+
+                <div class="busqueda-directorio">
+                    <label for="buscar-usuario-admin">Buscar usuario</label>
+                    <input type="search" id="buscar-usuario-admin" placeholder="Nombre, apellido, RUT, correo, teléfono o rol">
+                    <p id="resultado-busqueda-usuarios" class="ayuda-formulario"></p>
+                </div>
+                
+                <div id="caja-edicion" style="display: none; background: #f8f9fa; padding: 15px; border: 1px solid #ddd; margin-bottom: 15px;">
+                    <h4 style="margin-bottom: 10px;">Actualizando Usuario...</h4>
+                    <input type="hidden" id="edit-id">
+                    <div class="cuadricula-edicion">
+                        <input type="text" id="edit-nombre" placeholder="Nombre">
+                        <input type="text" id="edit-paterno" placeholder="Apellido paterno">
+                        <input type="text" id="edit-materno" placeholder="Apellido materno">
+                        <input type="text" id="edit-rut" placeholder="RUT">
+                        <input type="text" id="edit-telefono" placeholder="Teléfono">
+                        <input type="text" id="edit-direccion" placeholder="Dirección">
+                        <input type="email" id="edit-correo" placeholder="Correo">
+                        <input type="text" id="edit-contrasena" placeholder="Contraseña">
+                        <select id="edit-rol">
+                            <option value="empleado">Empleado</option>
+                            <option value="rrhh">Recursos Humanos</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                        <input type="time" id="edit-entrada" style="padding: 5px;">
+                        <input type="time" id="edit-salida" style="padding: 5px;">
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top:10px;">
+                        <button onclick="guardarEdicion()" class="btn-primario" style="padding: 5px 10px; font-size: 0.8rem; background: #333;">Guardar</button>
+                        <button onclick="cancelarEdicion()" class="btn-texto" style="padding: 5px 10px; font-size: 0.8rem;">Cancelar</button>
+                    </div>
+                </div>
+
+                <div id="tabla-usuarios" style="margin-top: 15px; overflow-x: auto;"></div>
+            </div>
+
+            <!-- MÓDULO 4: QR -->
+            <div id="modulo-qr" style="display: none; text-align: left;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                    <h3 style="font-size: 1.1rem; color: #333; margin: 0;">Auditoría de Cambios</h3>
+                    <button class="btn-texto btn-volver" style="color: #dc3545; font-weight: bold; text-decoration: underline;">Volver al Menú</button>
+                </div>
+                <p class="texto-estado">Registro de quién realizó cada operación y qué información cambió.</p>
+                <div id="tabla-auditoria" style="overflow-x:auto;"></div>
+            </div>
+
+            <div id="modulo-qr-admin" style="display:none; text-align:left;">
+                <div class="encabezado-modulo">
+                    <h3>Mi QR de asistencia</h3>
+                    <button class="btn-texto btn-volver">Volver al Menú</button>
+                </div>
+                <div class="tarjeta-qr-empleado">
+                    <p class="ayuda-formulario">El administrador también puede registrar su entrada y salida mediante el kiosco.</p>
+                    <canvas id="qr-admin" width="220" height="220"></canvas>
+                    <button id="btn-generar-qr-admin" class="btn-primario" type="button">Generar QR</button>
+                    <p id="qr-contador-admin" class="texto-estado"></p>
+                </div>
+            </div>
+
+            <div id="modulo-calendario-admin" style="display:none; text-align:left;">
+                <div class="encabezado-modulo">
+                    <h3>Mi calendario de asistencia</h3>
+                    <button class="btn-texto btn-volver">Volver al Menú</button>
+                </div>
+                <div class="navegacion-calendario">
+                    <button type="button" id="btn-mes-anterior-admin" class="btn-calendario">‹</button>
+                    <strong id="titulo-mes-calendario-admin"></strong>
+                    <button type="button" id="btn-mes-siguiente-admin" class="btn-calendario">›</button>
+                </div>
+                <div class="leyenda-calendario">
+                    <span><i class="leyenda-verde"></i> Asistencia</span><span><i class="leyenda-azul"></i> Licencia</span>
+                    <span><i class="leyenda-roja"></i> Inasistencia</span><span><i class="leyenda-gris"></i> Sin información</span>
+                </div>
+                <div id="calendario-admin" class="calendario-asistencia"></div>
+            </div>
+            
+            <button id="btn-cerrar-sesion-admin" class="btn-texto" style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 15px; width: 100%;">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <!-- VISTA 4: PANEL DE RECURSOS HUMANOS -->
+    <div id="vista-rrhh" class="contenedor">
+        <div class="tarjeta tarjeta-ancha">
+            <h2>Panel de Recursos Humanos</h2>
+            <p style="font-size: 0.8rem; color: #666; text-transform: uppercase; margin-bottom: 20px;">
+                Sesión: <span id="nombre-rrhh" style="font-weight: bold; color: #000;"></span>
+            </p>
+
+            <div class="menu-rrhh">
+                <button id="btn-vista-qr-rrhh" class="boton-modulo-rrhh">Mi QR</button>
+                <button id="btn-vista-calendario-rrhh" class="boton-modulo-rrhh">Mi calendario</button>
+                <button id="btn-vista-alertas" class="boton-modulo-rrhh activo">Solicitudes pendientes <span id="contador-pendientes">0</span></button>
+                <button id="btn-vista-historial" class="boton-modulo-rrhh">Historial de solicitudes</button>
+            </div>
+
+            <div id="modulo-qr-rrhh" style="display:none; text-align:left;">
+                <h3 style="font-size:1.1rem; color:#333; margin-bottom:6px;">Mi QR de asistencia</h3>
+                <p class="ayuda-formulario">Esta sección corresponde únicamente a la asistencia de <strong id="nombre-asistencia-rrhh"></strong>.</p>
+
+                <div class="tarjeta-qr-empleado">
+                    <h3>Mi QR de asistencia</h3>
+                    <p class="ayuda-formulario">Genera un código temporal y muéstralo en el kiosco para registrar tu entrada o salida.</p>
+                    <canvas id="qr-rrhh" width="220" height="220"></canvas>
+                    <button id="btn-generar-qr-rrhh" class="btn-primario" type="button">Generar QR</button>
+                    <p id="qr-contador-rrhh" class="texto-estado"></p>
+                </div>
+            </div>
+
+            <div id="modulo-calendario-rrhh" style="display:none; text-align:left;">
+                <h3 style="font-size:1rem; color:#333; margin-top:25px;">Mi calendario de asistencia</h3>
+                <div class="navegacion-calendario">
+                    <button type="button" id="btn-mes-anterior-rrhh" class="btn-calendario">‹</button>
+                    <strong id="titulo-mes-calendario-rrhh"></strong>
+                    <button type="button" id="btn-mes-siguiente-rrhh" class="btn-calendario">›</button>
+                </div>
+                <div class="leyenda-calendario">
+                    <span><i class="leyenda-verde"></i> Asistencia</span>
+                    <span><i class="leyenda-azul"></i> Licencia</span>
+                    <span><i class="leyenda-roja"></i> Inasistencia</span>
+                    <span><i class="leyenda-gris"></i> Sin información</span>
+                </div>
+                <div id="calendario-rrhh" class="calendario-asistencia"></div>
+            </div>
+
+            <div id="modulo-alertas-rrhh">
+            <div style="border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; text-align:left;">
+                <h3 style="font-size: 1.1rem; color: #333; margin: 0;">Alertas activas</h3>
+                <p style="font-size:.73rem; color:#666; margin-top:5px;">Solo se muestran solicitudes pendientes de revisión.</p>
+            </div>
+
+            <div id="tabla-solicitudes-rrhh" style="overflow-x: auto;"></div>
+            <p id="mensaje-rrhh" class="texto-estado"></p>
+
+            </div>
+
+            <div id="modulo-historial-rrhh" style="display:none; text-align:left;">
+                <h3 style="font-size:1.1rem; color:#333; margin-bottom:12px;">Historial de decisiones</h3>
+                <div class="filtros-historial">
+                    <div class="grupo-input filtro-busqueda">
+                        <label for="buscar-historial">Empleado o RUT</label>
+                        <input type="text" id="buscar-historial" placeholder="Nombre, apellido o 12.345.678-9">
+                    </div>
+                    <div class="grupo-input">
+                        <label for="filtro-estado-historial">Estado</label>
+                        <select id="filtro-estado-historial">
+                            <option value="TODOS">Todos</option>
+                            <option value="APROBADA">Aprobadas</option>
+                            <option value="RECHAZADA">Rechazadas</option>
+                        </select>
+                    </div>
+                    <div class="grupo-input">
+                        <label for="filtro-tipo-historial">Tipo</label>
+                        <select id="filtro-tipo-historial">
+                            <option value="TODOS">Todos</option>
+                            <option value="LICENCIA">Licencia</option>
+                            <option value="CERTIFICADO">Certificado</option>
+                            <option value="OLVIDO_ENTRADA">Olvido entrada</option>
+                            <option value="OLVIDO_SALIDA">Olvido salida</option>
+                        </select>
+                    </div>
+                    <div class="grupo-input">
+                        <label for="filtro-desde-historial">Revisada desde</label>
+                        <input type="date" id="filtro-desde-historial">
+                    </div>
+                    <div class="grupo-input">
+                        <label for="filtro-hasta-historial">Revisada hasta</label>
+                        <input type="date" id="filtro-hasta-historial">
+                    </div>
+                </div>
+                <button id="btn-limpiar-filtros" class="btn-secundario btn-limpiar">Limpiar filtros</button>
+                <div id="historial-solicitudes-rrhh" style="overflow-x:auto;"></div>
+            </div>
+
+            <!-- Panel compartido: puede abrirse desde pendientes o desde historial. -->
+            <div id="detalle-solicitud-rrhh" class="panel-detalle" style="display:none;">
+                <div class="detalle-encabezado">
+                    <h3>Detalle de solicitud</h3>
+                    <button id="btn-cerrar-detalle" class="btn-texto btn-en-linea">Cerrar</button>
+                </div>
+                <div id="datos-detalle-solicitud" class="cuadricula-detalle"></div>
+                <p id="mensaje-documento-rrhh" class="texto-estado"></p>
+                <div id="controles-revision">
+                    <div class="grupo-input" id="grupo-hora-corregida" style="display:none;">
+                        <label id="label-hora-corregida" for="hora-corregida-rrhh">Hora de marcación confirmada</label>
+                        <input type="time" id="hora-corregida-rrhh">
+                    </div>
+                    <div class="grupo-input">
+                        <label for="comentario-revision-rrhh">Comentario de revisión</label>
+                        <textarea id="comentario-revision-rrhh" rows="3" placeholder="Indique el motivo de la aprobación o rechazo"></textarea>
+                    </div>
+                    <div class="acciones-revision">
+                        <button id="btn-aprobar-solicitud" class="btn-rrhh aprobar">Aprobar</button>
+                        <button id="btn-rechazar-solicitud" class="btn-rrhh rechazar">Rechazar</button>
+                    </div>
+                </div>
+            </div>
+            <button id="btn-cerrar-sesion-rrhh" class="btn-texto" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; width: 100%;">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div id="modal-justificacion-comun" class="modal-justificacion" style="display:none;">
+        <div class="modal-justificacion-contenido">
+            <h3 id="titulo-justificacion-comun">Justificar inasistencia</h3>
+            <p class="ayuda-formulario">Este formulario permite que administradores y personal de RRHH justifiquen una inasistencia propia.</p>
+            <form id="formulario-justificacion-comun">
+                <input type="hidden" id="justificacion-comun-fecha">
+                <div class="resumen-automatico">
+                    <div><strong>Usuario:</strong> <span id="justificacion-comun-empleado"></span></div>
+                    <div><strong>Correo:</strong> <span id="justificacion-comun-correo"></span></div>
+                    <div><strong>Estado inicial:</strong> PENDIENTE</div>
+                </div>
+                <div class="grupo-input">
+                    <label for="tipo-justificacion-comun">Tipo de solicitud</label>
+                    <select id="tipo-justificacion-comun" required>
+                        <option value="CERTIFICADO">Certificado</option>
+                        <option value="OLVIDO_ENTRADA">Olvido de entrada</option>
+                        <option value="OLVIDO_SALIDA">Olvido de salida</option>
+                    </select>
+                </div>
+                <div class="grupo-input">
+                    <label for="justificacion-comun-hasta">Fecha hasta</label>
+                    <input type="date" id="justificacion-comun-hasta" required>
+                </div>
+                <div class="grupo-input">
+                    <label for="motivo-justificacion-comun">Motivo</label>
+                    <input type="text" id="motivo-justificacion-comun" required placeholder="Explique brevemente el motivo">
+                </div>
+                <div class="grupo-input">
+                    <label for="archivo-justificacion-comun">Certificado o respaldo</label>
+                    <input type="file" id="archivo-justificacion-comun" accept=".pdf,image/*">
+                </div>
+                <p id="mensaje-justificacion-comun" class="texto-estado"></p>
+                <div class="acciones-modal">
+                    <button type="button" id="btn-cancelar-justificacion-comun" class="btn-texto">Cerrar</button>
+                    <button type="submit" class="btn-primario">Enviar a RRHH</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script type="module" src="./vistas/app-supabase.js"></script>
+</body>
+</html>
