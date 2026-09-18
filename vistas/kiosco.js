@@ -23,7 +23,7 @@ function qrLeidoExitosamente(textoDecodificado) {
         mensajeKiosco.textContent = "Listo para el siguiente QR...";
         mensajeKiosco.style.color = "#666";
         escanerQR.resume();
-    }, 3000);
+    }, 10000);
 }
 
 function qrErrorLectura(error) {
