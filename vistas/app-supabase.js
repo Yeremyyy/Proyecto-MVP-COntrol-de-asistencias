@@ -124,7 +124,7 @@ async function generarQrPersonal(idCanvas, idMensaje) {
         clearInterval(qrIntervalo);
         // El QR nunca debe permanecer visible por más de 45 segundos,
         // aunque una base de datos antigua devuelva una expiración mayor.
-        let segundos = Math.min(45, Math.max(0, Math.ceil((new Date(resultado.expira_en) - Date.now()) / 1000)));
+        let segundos = Math.min(30, Math.max(0, Math.ceil((new Date(resultado.expira_en) - Date.now()) / 1000)));
         mensaje.textContent = `QR válido durante ${segundos} segundos`;
         qrIntervalo = setInterval(() => {
             segundos--;
