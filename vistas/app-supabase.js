@@ -1,11 +1,5 @@
-<<<<<<< HEAD
 import { rpc, configurado } from '../src/db.js';
 import QRCode from 'qrcode';
-=======
-const { rpc, configurado } = require('../src/db');
-const QRCode = require('qrcode');
-const { ipcRenderer } = require('electron');
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
 
 let usuarioActual = null;
 let tokenSesion = sessionStorage.getItem('tokenSesion');
@@ -88,11 +82,7 @@ async function entrarPanel(usuario) {
 $('formulario-login').addEventListener('submit', async evento => {
     evento.preventDefault();
     const mensaje = $('mensaje-error');
-<<<<<<< HEAD
     mensaje.textContent = configurado ? 'Conectando...' : 'Debes configurar las variables de Supabase';
-=======
-    mensaje.textContent = configurado ? 'Conectando...' : 'Debes configurar Supabase en src/config.js';
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
     if (!configurado) return;
     try {
         const resultado = await rpc('autenticar_usuario', {
@@ -172,11 +162,7 @@ function prepararDatosAutomaticos() {
     $('solicitud-correo-auto').textContent = usuarioActual.correo;
 }
 
-<<<<<<< HEAD
 async function renderizarCalendarioPara({ mesReferencia, contenedorId, tituloId, usuarioId = null, permitirJustificacion = false, formularioComun = false }) {
-=======
-async function renderizarCalendarioPara({ mesReferencia, contenedorId, tituloId, usuarioId = null, permitirJustificacion = false }) {
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
     const ano = mesReferencia.getFullYear();
     const mes = mesReferencia.getMonth();
     const desde = `${ano}-${String(mes + 1).padStart(2, '0')}-01`;
@@ -214,14 +200,10 @@ async function renderizarCalendarioPara({ mesReferencia, contenedorId, tituloId,
         const celda = document.createElement('button');
         celda.type = 'button'; celda.textContent = dia; celda.title = titulo;
         celda.style.cssText = `padding:9px 3px;border:0;border-radius:4px;color:${fondo === '#e9ecef' ? '#333' : '#fff'};background:${fondo};cursor:pointer`;
-<<<<<<< HEAD
         if (fondo === '#dc3545' && permitirJustificacion) {
             celda.classList.add('dia-justificable');
             celda.addEventListener('click', () => formularioComun ? abrirJustificacionComun(fecha) : abrirJustificacion(fecha));
         }
-=======
-        if (fondo === '#dc3545' && permitirJustificacion) celda.addEventListener('click', () => abrirJustificacion(fecha));
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
         contenedor.appendChild(celda);
     }
 }
@@ -240,13 +222,9 @@ async function renderizarCalendarioRrhh() {
         mesReferencia: mesCalendarioRrhh,
         contenedorId: 'calendario-rrhh',
         tituloId: 'titulo-mes-calendario-rrhh',
-<<<<<<< HEAD
         usuarioId: usuarioActual.id,
         permitirJustificacion: true,
         formularioComun: true
-=======
-        usuarioId: usuarioActual.id
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
     });
 }
 
@@ -255,13 +233,9 @@ async function renderizarCalendarioAdmin() {
         mesReferencia: mesCalendarioAdmin,
         contenedorId: 'calendario-admin',
         tituloId: 'titulo-mes-calendario-admin',
-<<<<<<< HEAD
         usuarioId: usuarioActual.id,
         permitirJustificacion: true,
         formularioComun: true
-=======
-        usuarioId: usuarioActual.id
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
     });
 }
 
@@ -284,7 +258,6 @@ function abrirJustificacion(fecha) {
     $('fecha-hasta-solicitud').value = fecha;
 }
 
-<<<<<<< HEAD
 function abrirJustificacionComun(fecha) {
     $('justificacion-comun-empleado').textContent = nombreCompleto(usuarioActual);
     $('justificacion-comun-correo').textContent = usuarioActual.correo;
@@ -304,8 +277,6 @@ $('modal-justificacion-comun')?.addEventListener('click', evento => {
     if (evento.target === $('modal-justificacion-comun')) cerrarJustificacionComun();
 });
 
-=======
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
 $('btn-mostrar-licencia')?.addEventListener('click', () => $('contenedor-formulario-licencia').style.display = 'block');
 $('btn-cancelar-licencia')?.addEventListener('click', () => $('contenedor-formulario-licencia').style.display = 'none');
 
@@ -350,7 +321,6 @@ $('formulario-justificacion-calendario')?.addEventListener('submit', async event
     if (ok) { evento.target.reset(); $('contenedor-formulario-fecha').style.display = 'none'; }
 });
 
-<<<<<<< HEAD
 $('formulario-justificacion-comun')?.addEventListener('submit', async evento => {
     evento.preventDefault();
     const ok = await enviarSolicitud({
@@ -368,8 +338,6 @@ $('formulario-justificacion-comun')?.addEventListener('submit', async evento => 
     }
 });
 
-=======
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
 // ---------------- ADMINISTRACIÓN ----------------
 const modulosAdmin = { reportes: $('modulo-reportes'), crear: $('modulo-crear'), gestionar: $('modulo-gestionar'), auditoria: $('modulo-qr'), qrPersonal: $('modulo-qr-admin'), calendarioPersonal: $('modulo-calendario-admin') };
 function abrirModuloAdmin(nombre) {
@@ -465,7 +433,6 @@ window.descargarReporteEmpleado = async id => {
     if (!registros.length) lineas.push(['Sin registros en el período seleccionado']);
     const contenido = lineas.map(fila => fila.map(campoCsv).join(';')).join('\r\n');
     const nombre = `reporte_${usuario.rut.replace(/[^0-9kK]/g,'')}_${rangoReporteActual.desde}_${rangoReporteActual.hasta}.csv`;
-<<<<<<< HEAD
     const blob = new Blob([`\uFEFF${contenido}`], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const enlace = document.createElement('a');
@@ -475,10 +442,6 @@ window.descargarReporteEmpleado = async id => {
     enlace.click();
     enlace.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-=======
-    const resultado = await ipcRenderer.invoke('guardar-reporte-csv', { nombre, contenido });
-    if (!resultado.cancelado && !resultado.ok) alert(resultado.error);
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
 };
 
 $('buscar-reporte-empleado')?.addEventListener('input', dibujarReportes);
@@ -632,7 +595,6 @@ window.abrirArchivoSolicitud=async id=>{
         mensaje.style.color='#dc3545';
         return;
     }
-<<<<<<< HEAD
     try {
         const coincidencia=String(s.archivo_base64).match(/^data:([^;,]+);base64,([\s\S]+)$/);
         if(!coincidencia) throw new Error('El documento guardado no tiene un formato válido.');
@@ -655,17 +617,6 @@ window.abrirArchivoSolicitud=async id=>{
         mensaje.textContent='Documento abierto en una pestaña nueva.';
         mensaje.style.color='#198754';
         setTimeout(()=>URL.revokeObjectURL(url),60000);
-=======
-    mensaje.textContent='Abriendo documento...';
-    mensaje.style.color='#666';
-    try {
-        const resultado=await ipcRenderer.invoke('abrir-documento-solicitud',{
-            datos:s.archivo_base64,
-            nombre:s.nombre_archivo||'documento.pdf'
-        });
-        mensaje.textContent=resultado.ok?'Documento abierto en el visor predeterminado.':resultado.error;
-        mensaje.style.color=resultado.ok?'#198754':'#dc3545';
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
     } catch(error) {
         mensaje.textContent=textoError(error);
         mensaje.style.color='#dc3545';
@@ -678,11 +629,7 @@ $('btn-rechazar-solicitud')?.addEventListener('click',()=>revisar('RECHAZADA'));
 
 // Si se recargó la ventana, se recupera la sesión local mientras siga vigente en la BD.
 window.addEventListener('DOMContentLoaded', async () => {
-<<<<<<< HEAD
     if (!configurado) $('mensaje-error').textContent='Configura VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY antes de iniciar.';
-=======
-    if (!configurado) $('mensaje-error').textContent='Configura Supabase en src/config.js antes de iniciar.';
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
     const guardado=sessionStorage.getItem('usuarioActual');
     if(tokenSesion&&guardado){try{await entrarPanel(JSON.parse(guardado));}catch(_){sessionStorage.clear();tokenSesion=null;}}
 });

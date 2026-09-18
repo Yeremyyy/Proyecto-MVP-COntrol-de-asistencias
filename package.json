@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "name": "sistema-asistencia-web-vercel",
   "version": "2.0.0",
   "description": "Sistema web de asistencia, RRHH, auditoría y QR con Supabase",
@@ -9,26 +8,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "vite build"
-=======
-  "name": "sistema-asistencia-supabase-qr",
-  "version": "2.0.0",
-  "description": "Sistema integrado de asistencia, RRHH, auditoría y QR con Supabase",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron .",
-    "check": "node --check main.js && node --check src/db.js && node --check vistas/app-supabase.js && node --check vistas/kiosco-supabase.js"
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Yeremyyy/Proyecto-MVP-COntrol-de-asistencias.git"
   },
   "keywords": [],
-<<<<<<< HEAD
   "type": "module",
-=======
-  "type": "commonjs",
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
   "bugs": {
     "url": "https://github.com/Yeremyyy/Proyecto-MVP-COntrol-de-asistencias/issues"
   },
@@ -39,10 +25,6 @@
     "qrcode": "^1.5.4"
   },
   "devDependencies": {
-<<<<<<< HEAD
     "vite": "^7.1.7"
-=======
-    "electron": "^43.4.1"
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
   }
 }

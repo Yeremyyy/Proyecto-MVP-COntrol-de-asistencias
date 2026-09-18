@@ -312,7 +312,6 @@ td {
     .menu-rrhh, .menu-personal, .cuadricula-edicion, .filtros-reporte { grid-template-columns:1fr; }
     .filtros-historial { grid-template-columns:1fr; }
 }
-<<<<<<< HEAD
 .dia-justificable {
     cursor: pointer !important;
     box-shadow: inset 0 0 0 2px rgba(255,255,255,.45);
@@ -354,5 +353,3 @@ td {
     width: auto;
     margin: 0;
 }
-=======
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df

@@ -1,9 +1,6 @@
 node_modules/
-<<<<<<< HEAD
 .env
 .env.local
 dist/
-=======
->>>>>>> e4be5c92cfeb857207d8a1cc7c4ee386e787a5df
 .DS_Store
 npm-debug.log*
