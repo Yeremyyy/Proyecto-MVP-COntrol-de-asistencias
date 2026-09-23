@@ -9,6 +9,7 @@ let solicitudesBD = [];
 let solicitudSeleccionadaId = null;
 let relojIntervalo = null;
 let qrIntervalo = null;
+let qrGeneracionId = 0;
 let mesCalendario = new Date();
 let mesCalendarioRrhh = new Date();
 let mesCalendarioAdmin = new Date();
@@ -31,6 +32,12 @@ function fechaLocal(date = new Date()) {
 
 function nombreCompleto(usuario) {
     return [usuario.nombre, usuario.apellido_paterno, usuario.apellido_materno].filter(Boolean).join(' ');
+}
+
+function escaparHtml(valor) {
+    return String(valor ?? '').replace(/[&<>'"]/g, caracter => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    })[caracter]);
 }
 
 function mostrarVista(id) {
@@ -107,6 +114,7 @@ async function cerrarSesion() {
     sessionStorage.clear();
     clearInterval(relojIntervalo);
     clearInterval(qrIntervalo);
+    qrGeneracionId++;
     mostrarVista('vista-login');
 }
 
@@ -115,23 +123,39 @@ async function cerrarSesion() {
 // ---------------- ASISTENCIA PERSONAL: QR ----------------
 async function generarQrPersonal(idCanvas, idMensaje) {
     const mensaje = $(idMensaje);
+    const generacionActual = ++qrGeneracionId;
+    clearInterval(qrIntervalo);
     try {
         mensaje.textContent = 'Generando QR seguro...';
         const resultado = await rpc('generar_qr', { p_token: tokenSesion });
+        if (generacionActual !== qrGeneracionId || !tokenSesion) return;
         const canvas = $(idCanvas);
         await QRCode.toCanvas(canvas, resultado.token, { width: 220, margin: 2, errorCorrectionLevel: 'H' });
         canvas.style.display = 'block';
-        clearInterval(qrIntervalo);
-        // El QR nunca debe permanecer visible por más de 45 segundos,
-        // aunque una base de datos antigua devuelva una expiración mayor.
+        // La base de datos sigue siendo la autoridad sobre expiración y uso único.
         let segundos = Math.min(30, Math.max(0, Math.ceil((new Date(resultado.expira_en) - Date.now()) / 1000)));
-        mensaje.textContent = `QR válido durante ${segundos} segundos`;
+        mensaje.textContent = `QR válido durante ${segundos} segundos. Se renovará automáticamente.`;
         qrIntervalo = setInterval(() => {
-            segundos--;
-            mensaje.textContent = segundos > 0 ? `QR válido durante ${segundos} segundos` : 'QR vencido. Genera uno nuevo.';
+            if (generacionActual !== qrGeneracionId) {
+                clearInterval(qrIntervalo);
+                return;
+            }
+            segundos = Math.max(0, segundos - 1);
+            mensaje.textContent = segundos > 0
+                ? `QR válido durante ${segundos} segundos. Se renovará automáticamente.`
+                : 'Renovando QR...';
             if (segundos <= 0) {
                 clearInterval(qrIntervalo);
                 canvas.style.display = 'none';
+                const modulo = canvas.closest('[id^="modulo-qr"]');
+                const sigueVisible = !modulo || modulo.offsetParent !== null;
+                if (tokenSesion && usuarioActual && sigueVisible) {
+                    setTimeout(() => {
+                        if (generacionActual === qrGeneracionId && tokenSesion) generarQrPersonal(idCanvas, idMensaje);
+                    }, 250);
+                } else {
+                    mensaje.textContent = 'QR vencido. Abra esta sección para generar uno nuevo.';
+                }
             }
         }, 1000);
     } catch (error) {
@@ -144,15 +168,53 @@ $('btn-generar-qr-rrhh')?.addEventListener('click', () => generarQrPersonal('qr-
 $('btn-generar-qr-admin')?.addEventListener('click', () => generarQrPersonal('qr-admin', 'qr-contador-admin'));
 
 function abrirModuloEmpleado(modulo) {
-    const esQr = modulo === 'qr';
-    $('modulo-qr-empleado').style.display = esQr ? 'block' : 'none';
-    $('modulo-calendario-empleado').style.display = esQr ? 'none' : 'block';
-    $('btn-empleado-qr').classList.toggle('activo', esQr);
-    $('btn-empleado-calendario').classList.toggle('activo', !esQr);
-    if (!esQr) renderizarCalendario();
+    const modulos = { qr: $('modulo-qr-empleado'), calendario: $('modulo-calendario-empleado'), solicitudes: $('modulo-solicitudes-empleado') };
+    Object.entries(modulos).forEach(([nombre, elemento]) => elemento.style.display = nombre === modulo ? 'block' : 'none');
+    $('btn-empleado-qr').classList.toggle('activo', modulo === 'qr');
+    $('btn-empleado-calendario').classList.toggle('activo', modulo === 'calendario');
+    $('btn-empleado-solicitudes').classList.toggle('activo', modulo === 'solicitudes');
+    if (modulo === 'calendario') renderizarCalendario();
+    if (modulo === 'solicitudes') renderizarSolicitudesEmpleado();
 }
 $('btn-empleado-qr')?.addEventListener('click', () => abrirModuloEmpleado('qr'));
 $('btn-empleado-calendario')?.addEventListener('click', () => abrirModuloEmpleado('calendario'));
+$('btn-empleado-solicitudes')?.addEventListener('click', () => abrirModuloEmpleado('solicitudes'));
+
+async function renderizarSolicitudesEmpleado() {
+    const contenedor = $('lista-solicitudes-empleado');
+    contenedor.innerHTML = '<p class="texto-estado">Cargando solicitudes...</p>';
+    try {
+        await cargarSolicitudes();
+        const filtro = $('filtro-solicitudes-empleado').value;
+        const solicitudes = solicitudesBD
+            .filter(s => Number(s.usuario_id) === Number(usuarioActual.usuario_id))
+            .filter(s => filtro === 'TODAS' || s.estado === filtro)
+            .sort((a, b) => new Date(b.fecha_envio) - new Date(a.fecha_envio));
+        if (!solicitudes.length) {
+            contenedor.innerHTML = '<p class="texto-estado">No hay solicitudes para el estado seleccionado.</p>';
+            return;
+        }
+        const filas = solicitudes.map(s => `<tr>
+            <td>${new Date(s.fecha_envio).toLocaleString('es-CL')}</td>
+            <td>${escaparHtml(s.tipo_solicitud.replaceAll('_', ' '))}</td>
+            <td>${escaparHtml(s.fecha_desde)} al ${escaparHtml(s.fecha_hasta)}</td>
+            <td><span class="estado estado-${s.estado.toLowerCase()}">${escaparHtml(s.estado)}</span></td>
+            <td><details class="detalle-solicitud-empleado"><summary>Ver detalle</summary><dl>
+                <dt>Motivo</dt><dd>${escaparHtml(s.motivo)}</dd>
+                <dt>Documento</dt><dd>${escaparHtml(s.nombre_archivo || 'Sin documento')}</dd>
+                <dt>Revisado por</dt><dd>${escaparHtml(s.revisor || 'Aún sin revisar')}</dd>
+                <dt>Fecha de revisión</dt><dd>${s.fecha_revision ? new Date(s.fecha_revision).toLocaleString('es-CL') : 'Pendiente'}</dd>
+                <dt>Comentario de RR. HH.</dt><dd>${escaparHtml(s.comentario_revision || 'Sin comentario')}</dd>
+            </dl></details></td>
+        </tr>`).join('');
+        contenedor.innerHTML = `<table><thead><tr><th>Enviada</th><th>Tipo</th><th>Período</th><th>Estado</th><th>Detalle</th></tr></thead><tbody>${filas}</tbody></table>`;
+    } catch (error) {
+        contenedor.innerHTML = `<p class="texto-error">${escaparHtml(textoError(error))}</p>`;
+    }
+}
+
+$('btn-actualizar-solicitudes-empleado')?.addEventListener('click', renderizarSolicitudesEmpleado);
+$('filtro-solicitudes-empleado')?.addEventListener('change', renderizarSolicitudesEmpleado);
 
 // ---------------- EMPLEADO: CALENDARIO Y SOLICITUDES ----------------
 function prepararDatosAutomaticos() {
@@ -451,7 +513,21 @@ $('fecha-reporte')?.addEventListener('change', renderizarReportes);
 async function renderizarAuditoria() {
     try {
         const datos = await rpc('listar_auditoria', { p_token: tokenSesion });
-        const filas = datos.map(a => `<tr><td>${new Date(a.fecha_cambio).toLocaleString('es-CL')}</td><td>${a.actor}</td><td>${a.tabla}</td><td>${a.registro_id ?? '-'}</td><td>${a.accion}</td><td><details><summary>Ver cambio</summary><pre>${JSON.stringify({ antes: a.datos_anteriores, despues: a.datos_nuevos }, null, 2)}</pre></details></td></tr>`).join('');
+        const camposOcultos = new Set(['contrasena_hash', 'archivo_base64', 'token']);
+        const etiquetaCampo = campo => campo.replaceAll('_', ' ').replace(/^./, letra => letra.toUpperCase());
+        const mostrarValor = valor => valor === null || valor === undefined || valor === '' ? '—' : escaparHtml(typeof valor === 'object' ? JSON.stringify(valor) : valor);
+        const tablaCambios = (antes = {}, despues = {}) => {
+            const campos = [...new Set([...Object.keys(antes || {}), ...Object.keys(despues || {})])].filter(campo => !camposOcultos.has(campo));
+            if (!campos.length) return '<p class="texto-estado">No hay campos visibles para comparar.</p>';
+            const cambios = campos.map(campo => {
+                const valorAnterior = antes?.[campo];
+                const valorNuevo = despues?.[campo];
+                const cambiado = JSON.stringify(valorAnterior) !== JSON.stringify(valorNuevo);
+                return `<tr class="${cambiado ? 'campo-modificado' : ''}"><th>${escaparHtml(etiquetaCampo(campo))}</th><td>${mostrarValor(valorAnterior)}</td><td>${mostrarValor(valorNuevo)}</td></tr>`;
+            }).join('');
+            return `<div class="tabla-cambios-contenedor"><table class="tabla-cambios"><thead><tr><th>Campo</th><th>Antes</th><th>Después</th></tr></thead><tbody>${cambios}</tbody></table></div>`;
+        };
+        const filas = datos.map(a => `<tr><td>${new Date(a.fecha_cambio).toLocaleString('es-CL')}</td><td>${escaparHtml(a.actor)}</td><td>${escaparHtml(a.tabla)}</td><td>${a.registro_id ?? '-'}</td><td><span class="accion-auditoria">${escaparHtml(a.accion)}</span></td><td><details class="detalle-auditoria"><summary>Ver cambios</summary>${tablaCambios(a.datos_anteriores, a.datos_nuevos)}</details></td></tr>`).join('');
         $('tabla-auditoria').innerHTML = `<table><thead><tr><th>Fecha</th><th>Realizado por</th><th>Tabla</th><th>Registro</th><th>Acción</th><th>Detalle</th></tr></thead><tbody>${filas}</tbody></table>`;
     } catch (error) {
         $('tabla-auditoria').textContent = textoError(error);

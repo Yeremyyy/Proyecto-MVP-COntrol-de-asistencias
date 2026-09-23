@@ -255,7 +255,7 @@ td {
 .btn-documento { padding:8px 10px; background:#fff; color:#0056b3; border:1px solid #0056b3; text-transform:none; letter-spacing:0; }
 .btn-documento:hover { background:#0056b3; color:#fff; }
 .menu-rrhh { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px; }
-.menu-personal { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:22px; }
+.menu-personal { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:22px; }
 .boton-modulo-rrhh { padding:13px 10px; background:#fff; color:#333; border:1px solid #ccc; }
 .boton-modulo-rrhh.activo { background:#333; color:#fff; border-color:#333; }
 .boton-modulo-rrhh span { display:inline-block; min-width:21px; margin-left:5px; padding:2px 5px; background:#dc3545; color:#fff; border-radius:10px; }
@@ -274,6 +274,21 @@ td {
 .estado-pendiente { background:#fff3cd; color:#664d03; }
 .estado-aprobada { background:#d1e7dd; color:#0f5132; }
 .estado-rechazada { background:#f8d7da; color:#842029; }
+.tabla-responsive { width:100%; overflow-x:auto; }
+.filtro-solicitudes-empleado { display:flex; align-items:end; gap:12px; margin-bottom:15px; padding:12px; background:#f8f9fa; border:1px solid #e0e0e0; }
+.filtro-solicitudes-empleado label { margin:0 0 9px; }
+.filtro-solicitudes-empleado select { min-width:180px; }
+.detalle-solicitud-empleado summary, .detalle-auditoria summary { color:#0056b3; cursor:pointer; font-weight:600; }
+.detalle-solicitud-empleado dl { display:grid; grid-template-columns:minmax(125px,auto) 1fr; gap:7px 12px; min-width:310px; margin-top:10px; padding:12px; background:#f8f9fa; border:1px solid #ddd; }
+.detalle-solicitud-empleado dt { font-weight:700; }
+.detalle-solicitud-empleado dd { margin:0; overflow-wrap:anywhere; }
+.accion-auditoria { display:inline-block; padding:4px 7px; background:#e7f1ff; color:#084298; font-size:.68rem; font-weight:700; }
+.tabla-cambios-contenedor { max-width:540px; overflow:auto; margin-top:10px; }
+.tabla-cambios { min-width:500px; font-size:.72rem; }
+.tabla-cambios th:first-child { width:28%; }
+.tabla-cambios td { white-space:normal; overflow-wrap:anywhere; }
+.tabla-cambios .campo-modificado { background:#fff8df; }
+.tabla-cambios .campo-modificado th { color:#8a5a00; }
 
 @media (max-width:650px) {
     .cuadricula-detalle { grid-template-columns:1fr; }

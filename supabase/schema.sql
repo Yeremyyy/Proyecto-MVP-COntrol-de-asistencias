@@ -104,7 +104,7 @@ create table public.qr_tokens (
   token uuid primary key default gen_random_uuid(),
   usuario_id bigint not null references public.usuarios(usuario_id) on delete cascade,
   creado_en timestamptz not null default now(),
-  expira_en timestamptz not null default now() + interval '45 seconds',
+  expira_en timestamptz not null default now() + interval '30 seconds',
   usado_en timestamptz
 );
 
@@ -258,7 +258,7 @@ declare v_actor public.usuarios; v_id bigint;
 begin
   v_actor:=public.usuario_de_sesion(p_token);
   if v_actor.usuario_id is null then raise exception 'Sesión inválida'; end if;
-  if not exists(select 1 from public.roles r where r.rol_id=v_actor.rol_id and r.nombre in ('EMPLEADO','RRHH')) then raise exception 'El usuario no tiene permiso para enviar solicitudes'; end if;
+  if not exists(select 1 from public.roles r where r.rol_id=v_actor.rol_id and r.nombre in ('EMPLEADO','RRHH','ADMIN')) then raise exception 'El usuario no tiene permiso para enviar solicitudes'; end if;
   insert into public.solicitudes(usuario_id,tipo_solicitud,fecha_desde,fecha_hasta,motivo,nombre_archivo,archivo_base64)
   values(v_actor.usuario_id,upper(p_tipo),p_desde,p_hasta,trim(p_motivo),p_nombre_archivo,p_archivo_base64) returning solicitud_id into v_id;
   insert into public.auditoria(usuario_actor_id,tabla,registro_id,accion,datos_nuevos) values(v_actor.usuario_id,'solicitudes',v_id,'INSERT',jsonb_build_object('tipo',upper(p_tipo),'desde',p_desde,'hasta',p_hasta));
@@ -329,7 +329,7 @@ begin
   if not exists(select 1 from public.roles r where r.rol_id=v_actor.rol_id and r.nombre in ('EMPLEADO','RRHH','ADMIN')) then raise exception 'El usuario no tiene permiso para generar un QR'; end if;
   delete from public.qr_tokens where usuario_id=v_actor.usuario_id and usado_en is null;
   insert into public.qr_tokens(usuario_id, expira_en)
-  values(v_actor.usuario_id, now() + interval '45 seconds')
+  values(v_actor.usuario_id, now() + interval '30 seconds')
   returning * into v_qr;
   return jsonb_build_object('token',v_qr.token,'expira_en',v_qr.expira_en);
 end $$;
