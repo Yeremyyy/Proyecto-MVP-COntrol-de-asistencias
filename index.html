@@ -40,13 +40,14 @@
             <div class="menu-personal">
                 <button id="btn-empleado-qr" class="boton-modulo-rrhh activo">Mi QR</button>
                 <button id="btn-empleado-calendario" class="boton-modulo-rrhh">Mi calendario</button>
+                <button id="btn-empleado-solicitudes" class="boton-modulo-rrhh">Mis solicitudes</button>
             </div>
             <p id="mensaje-solicitud-global" class="mensaje-exito" style="display:none;"></p>
 
             <div id="modulo-qr-empleado">
             <div class="tarjeta-qr-empleado">
                 <h3>Mi QR de asistencia</h3>
-                <p class="ayuda-formulario">Presiona el botón y muestra el código en el kiosco. Es válido una sola vez durante 45 segundos.</p>
+                <p class="ayuda-formulario">Genere el código QR y muéstrelo en el kiosco para marcar su asistencia. Es válido durante 30 segundos.</p>
                 <canvas id="qr-empleado" width="220" height="220"></canvas>
                 <button id="btn-generar-qr-empleado" class="btn-primario" type="button">Generar QR</button>
                 <p id="qr-contador" class="texto-estado"></p>
@@ -145,6 +146,28 @@
                     </form>
                 </div>
             </div>
+            </div>
+
+            <div id="modulo-solicitudes-empleado" style="display:none; text-align:left;">
+                <div class="encabezado-modulo">
+                    <div>
+                        <h3>Mis solicitudes</h3>
+                        <p class="ayuda-formulario">Consulte si sus certificados, licencias o correcciones fueron aprobados o rechazados.</p>
+                    </div>
+                    <button id="btn-actualizar-solicitudes-empleado" type="button" class="btn-texto">Actualizar</button>
+                </div>
+                <div class="filtro-solicitudes-empleado">
+                    <label for="filtro-solicitudes-empleado">Estado</label>
+                    <select id="filtro-solicitudes-empleado">
+                        <option value="TODAS">Todas</option>
+                        <option value="PENDIENTE">Pendientes</option>
+                        <option value="APROBADA">Aprobadas</option>
+                        <option value="RECHAZADA">Rechazadas</option>
+                    </select>
+                </div>
+                <div id="lista-solicitudes-empleado" class="tabla-responsive">
+                    <p class="texto-estado">Seleccione esta sección para cargar sus solicitudes.</p>
+                </div>
             </div>
 
             <button id="btn-cerrar-sesion" class="btn-texto">Cerrar Sesión</button>
@@ -340,7 +363,7 @@
                     <button class="btn-texto btn-volver">Volver al Menú</button>
                 </div>
                 <div class="tarjeta-qr-empleado">
-                    <p class="ayuda-formulario">El administrador también puede registrar su entrada y salida mediante el kiosco.</p>
+                    <p class="ayuda-formulario">Genere el código QR y muéstrelo en el kiosco para marcar su asistencia. Es válido durante 30 segundos.</p>
                     <canvas id="qr-admin" width="220" height="220"></canvas>
                     <button id="btn-generar-qr-admin" class="btn-primario" type="button">Generar QR</button>
                     <p id="qr-contador-admin" class="texto-estado"></p>
@@ -389,7 +412,7 @@
 
                 <div class="tarjeta-qr-empleado">
                     <h3>Mi QR de asistencia</h3>
-                    <p class="ayuda-formulario">Genera un código temporal y muéstralo en el kiosco para registrar tu entrada o salida.</p>
+                    <p class="ayuda-formulario">Genere el código QR y muéstrelo en el kiosco para marcar su asistencia. Es válido durante 30 segundos.</p>
                     <canvas id="qr-rrhh" width="220" height="220"></canvas>
                     <button id="btn-generar-qr-rrhh" class="btn-primario" type="button">Generar QR</button>
                     <p id="qr-contador-rrhh" class="texto-estado"></p>
