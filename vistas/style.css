@@ -58,6 +58,11 @@ body {
     max-width: 750px; /* El panel admin ahora tiene permiso real para expandirse */
 }
 
+/* El administrador trabaja con tablas de muchas columnas. */
+#vista-admin .tarjeta-ancha {
+    max-width: 1180px;
+}
+
 /* TIPOGRAFÍA Y TEXTOS */
 h2 {
     margin-bottom: 25px;
@@ -252,6 +257,9 @@ td {
 .detalle-completo { grid-column:1 / -1; }
 .acciones-revision .btn-rrhh { flex:1; padding:12px; }
 .btn-detalle { padding:7px 10px; background:#0056b3; color:#fff; }
+.btn-detalle:hover, .btn-accion-tabla:hover { background:#003d80; }
+.acciones-tabla { display:flex; gap:7px; flex-wrap:wrap; }
+.btn-accion-tabla { padding:8px 11px; background:#0056b3; color:#fff; white-space:nowrap; }
 .btn-documento { padding:8px 10px; background:#fff; color:#0056b3; border:1px solid #0056b3; text-transform:none; letter-spacing:0; }
 .btn-documento:hover { background:#0056b3; color:#fff; }
 .menu-rrhh { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px; }
@@ -278,7 +286,9 @@ td {
 .filtro-solicitudes-empleado { display:flex; align-items:end; gap:12px; margin-bottom:15px; padding:12px; background:#f8f9fa; border:1px solid #e0e0e0; }
 .filtro-solicitudes-empleado label { margin:0 0 9px; }
 .filtro-solicitudes-empleado select { min-width:180px; }
-.detalle-solicitud-empleado summary, .detalle-auditoria summary { color:#0056b3; cursor:pointer; font-weight:600; }
+.detalle-solicitud-empleado summary, .detalle-auditoria summary { display:inline-block; padding:7px 10px; background:#0056b3; color:#fff; cursor:pointer; font-weight:600; list-style:none; }
+.detalle-solicitud-empleado summary:hover, .detalle-auditoria summary:hover { background:#003d80; }
+.detalle-solicitud-empleado summary::-webkit-details-marker, .detalle-auditoria summary::-webkit-details-marker { display:none; }
 .detalle-solicitud-empleado dl { display:grid; grid-template-columns:minmax(125px,auto) 1fr; gap:7px 12px; min-width:310px; margin-top:10px; padding:12px; background:#f8f9fa; border:1px solid #ddd; }
 .detalle-solicitud-empleado dt { font-weight:700; }
 .detalle-solicitud-empleado dd { margin:0; overflow-wrap:anywhere; }
@@ -289,6 +299,13 @@ td {
 .tabla-cambios td { white-space:normal; overflow-wrap:anywhere; }
 .tabla-cambios .campo-modificado { background:#fff8df; }
 .tabla-cambios .campo-modificado th { color:#8a5a00; }
+#contenedor-reporte table { min-width:900px; }
+#tabla-usuarios table { min-width:940px; }
+#tabla-auditoria > table { min-width:860px; }
+
+@media (max-width:900px) {
+    #vista-admin .tarjeta-ancha { padding:24px; }
+}
 
 @media (max-width:650px) {
     .cuadricula-detalle { grid-template-columns:1fr; }

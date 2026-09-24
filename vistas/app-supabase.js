@@ -187,7 +187,7 @@ async function renderizarSolicitudesEmpleado() {
         await cargarSolicitudes();
         const filtro = $('filtro-solicitudes-empleado').value;
         const solicitudes = solicitudesBD
-            .filter(s => Number(s.usuario_id) === Number(usuarioActual.usuario_id))
+            .filter(s => Number(s.usuario_id) === Number(usuarioActual.id ?? usuarioActual.usuario_id))
             .filter(s => filtro === 'TODAS' || s.estado === filtro)
             .sort((a, b) => new Date(b.fecha_envio) - new Date(a.fecha_envio));
         if (!solicitudes.length) {
@@ -587,7 +587,7 @@ function dibujarTablaUsuarios() {
         return;
     }
     let html = '<table><thead><tr><th>ID</th><th>Nombre</th><th>RUT</th><th>Rol</th><th>Correo</th><th>Horario</th><th>Acciones</th></tr></thead><tbody>';
-    usuariosFiltrados.forEach(u => html += `<tr><td>${u.usuario_id}</td><td>${nombreCompleto(u)}</td><td>${u.rut}</td><td>${u.rol}</td><td>${u.correo}</td><td>${u.hora_entrada.slice(0,5)} - ${u.hora_salida.slice(0,5)}</td><td><button onclick="editarUsuario(${u.usuario_id})">Editar</button> <button onclick="eliminarUsuario(${u.usuario_id})">Desactivar</button></td></tr>`);
+    usuariosFiltrados.forEach(u => html += `<tr><td>${u.usuario_id}</td><td>${nombreCompleto(u)}</td><td>${u.rut}</td><td>${u.rol}</td><td>${u.correo}</td><td>${u.hora_entrada.slice(0,5)} - ${u.hora_salida.slice(0,5)}</td><td class="acciones-tabla"><button class="btn-accion-tabla" onclick="editarUsuario(${u.usuario_id})">Editar</button><button class="btn-accion-tabla" onclick="eliminarUsuario(${u.usuario_id})">Desactivar</button></td></tr>`);
     $('tabla-usuarios').innerHTML = html + '</tbody></table>';
 }
 $('buscar-usuario-admin')?.addEventListener('input', dibujarTablaUsuarios);
